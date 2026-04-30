@@ -1,2 +1,2 @@
 # actionforcelabs-site
-ActionForceLabs public website (SageForge v9)
+ActionForceLabs public website (SageForge Core)
