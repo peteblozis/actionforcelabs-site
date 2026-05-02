@@ -1,0 +1,164 @@
+<!--
+  Shared lesson template.
+  Each of the 8 lesson HTML files in this folder uses the same structure:
+    1. Tester banner (top)
+    2. Breadcrumb
+    3. Lesson number + title
+    4. Lesson body
+    5. Prev/Next navigation
+    6. Footer
+
+  All 8 share the styles defined here. To edit the visual style, edit only
+  this file and re-apply to the 8 lesson files via the build step or by
+  copying the <style> block.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Show, Don't Tell — Examples — Prompt Lessons | ActionForge Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+  #tester-banner{background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);border-bottom:2px solid var(--amber);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);position:sticky;top:0;z-index:100}
+  #tester-banner .badge{background:var(--amber);color:#0d0f14;font-weight:600;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin:24px 0 18px}
+  .crumbs a{color:var(--accent);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .lesson-num{font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);letter-spacing:0.06em;margin-bottom:8px;margin-top:8px}
+  h1.lesson-h1{font-size:2rem;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+  h2{font-size:1.15rem;font-weight:600;margin:32px 0 12px;color:var(--text)}
+  h3{font-size:1rem;font-weight:600;margin:24px 0 8px;color:var(--text)}
+  p{margin-bottom:16px;color:var(--text);font-size:1rem}
+  .muted{color:var(--text-muted);font-size:0.92rem}
+  ul,ol{margin:0 0 18px 22px;color:var(--text)}
+  li{margin-bottom:6px}
+  blockquote{border-left:3px solid var(--accent);padding:10px 18px;margin:18px 0;background:rgba(79,156,249,0.06);color:var(--text-muted);font-style:italic;border-radius:0 var(--radius) var(--radius) 0}
+  code{font-family:var(--font-mono);font-size:0.88em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+  pre{font-family:var(--font-mono);font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:16px 0;overflow-x:auto;line-height:1.55}
+  pre code{background:none;padding:0;color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+  .callout strong{color:var(--green);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-mono);font-weight:500}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.warn strong{color:var(--amber)}
+  .nav{display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav a{display:flex;flex-direction:column;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;max-width:48%;transition:all 0.15s}
+  .nav a:hover{border-color:var(--accent);background:var(--surface2)}
+  .nav a.next{text-align:right;align-items:flex-end}
+  .nav .nav-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em}
+  .nav .nav-title{font-weight:600;font-size:0.92rem;margin-top:4px}
+  .nav .placeholder{visibility:hidden}
+  footer.tester-foot{margin-top:36px;font-size:0.78rem;color:var(--text-muted);text-align:center}
+  @media(max-width:520px){h1.lesson-h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly.</span>
+</div>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a href="/tester">Tester home</a> &nbsp;›&nbsp;
+    <a href="/tester/prompt-lessons">Prompt Lessons</a> &nbsp;›&nbsp;
+    Lesson 04
+  </div>
+
+  <div class="lesson-num">LESSON 04</div>
+  <h1 class="lesson-h1">Show, Don't Tell — Examples</h1>
+
+  
+<p>If you remember nothing else from this series, remember this: <strong>examples are the highest-leverage thing you can put in a prompt</strong>.</p>
+
+<p>Telling an AI "make it casual" is fuzzy. Showing it one casual sentence and saying "match this" is exact.</p>
+
+<h2>Why examples beat instructions</h2>
+
+<p>Instructions describe the destination. Examples show it. The AI doesn't have to interpret what "casual" means to you specifically — it has a sample.</p>
+
+<pre><code>Instructions only:
+"Write a friendly product description, not too formal,
+ with a bit of personality."
+
+Instructions + example:
+"Write a product description in this voice:
+ 'This mug doesn't care if it's Monday. It just wants to be
+ full of coffee and sit in your hand. 12 oz. Dishwasher safe.'
+
+ Now write one for: a wool blanket"</code></pre>
+
+<p>The second prompt nails the tone every time. The first gets you something different on every run.</p>
+
+<h2>The "before and after" example pattern</h2>
+
+<p>This is the most powerful pattern in prompting. Instead of describing what to do, show the input and the desired output:</p>
+
+<pre><code>"Rewrite customer feedback into bug tickets.
+
+Example:
+INPUT:  'the search is broken when i type my name'
+OUTPUT: 'BUG: User search returns no results when query
+         contains user's own name.'
+
+Now do these:
+1. 'login page just spins forever'
+2. 'cant upload more than 3 files'
+3. 'dark mode keeps flipping back to light'"</code></pre>
+
+<p>The AI learned the pattern from one example. It applies it consistently to all three.</p>
+
+<h2>How many examples do you need?</h2>
+
+<p>One good example is usually enough. Two is great. Three is the upper limit before diminishing returns.</p>
+
+<p>What matters more than quantity is <strong>quality</strong>:</p>
+
+<ul>
+  <li>The example should be representative, not edge-case</li>
+  <li>The example should match the difficulty of what you're really asking for</li>
+  <li>The example should be correct (the AI will mimic mistakes too)</li>
+</ul>
+
+<div class="callout warn">
+  <strong>Common trap</strong>
+  <p style="margin-top:6px;margin-bottom:0">Don't use only easy examples and then ask for a hard one. If your examples are simple sentences but the real task is complex paragraphs, the AI will assume "short and simple" is the rule. Match example difficulty to actual difficulty.</p>
+</div>
+
+<h2>When examples don't help</h2>
+
+<p>If you can't write a good example yourself, examples won't save you. The AI can't infer what you want better than you can articulate it. In that case, go back to Lesson 02 and get clearer on the goal first.</p>
+
+<h2>Try it</h2>
+
+<p>Pick something you've struggled to get the AI to do consistently. Write one example of the answer you wished you'd gotten. Put it in your next prompt. Watch what happens.</p>
+
+<h2>What's next</h2>
+
+<p>Lesson 05 is about constraints — telling the AI what shape the answer should take. Length, structure, format. The boring stuff that makes the difference between usable and unusable.</p>
+
+
+  <nav class="nav">
+    <a href="/tester/prompt-lessons/03-give-it-a-role">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">03. Give It a Role</span>
+      </a>
+    <a class="next" href="/tester/prompt-lessons/05-constraints-and-format">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">05. Constraints and Format</span>
+      </a>
+  </nav>
+
+  <footer class="tester-foot">
+    Prompt Lessons © Pete Blozis · ActionForge Labs tester program
+  </footer>
+</div>
+</body>
+</html>

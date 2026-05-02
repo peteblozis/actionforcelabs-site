@@ -1,0 +1,147 @@
+<!--
+  Shared lesson template.
+  Each of the 8 lesson HTML files in this folder uses the same structure:
+    1. Tester banner (top)
+    2. Breadcrumb
+    3. Lesson number + title
+    4. Lesson body
+    5. Prev/Next navigation
+    6. Footer
+
+  All 8 share the styles defined here. To edit the visual style, edit only
+  this file and re-apply to the 8 lesson files via the build step or by
+  copying the <style> block.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>What Is a Prompt, Really? — Prompt Lessons | ActionForge Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+  #tester-banner{background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);border-bottom:2px solid var(--amber);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);position:sticky;top:0;z-index:100}
+  #tester-banner .badge{background:var(--amber);color:#0d0f14;font-weight:600;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin:24px 0 18px}
+  .crumbs a{color:var(--accent);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .lesson-num{font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);letter-spacing:0.06em;margin-bottom:8px;margin-top:8px}
+  h1.lesson-h1{font-size:2rem;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+  h2{font-size:1.15rem;font-weight:600;margin:32px 0 12px;color:var(--text)}
+  h3{font-size:1rem;font-weight:600;margin:24px 0 8px;color:var(--text)}
+  p{margin-bottom:16px;color:var(--text);font-size:1rem}
+  .muted{color:var(--text-muted);font-size:0.92rem}
+  ul,ol{margin:0 0 18px 22px;color:var(--text)}
+  li{margin-bottom:6px}
+  blockquote{border-left:3px solid var(--accent);padding:10px 18px;margin:18px 0;background:rgba(79,156,249,0.06);color:var(--text-muted);font-style:italic;border-radius:0 var(--radius) var(--radius) 0}
+  code{font-family:var(--font-mono);font-size:0.88em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+  pre{font-family:var(--font-mono);font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:16px 0;overflow-x:auto;line-height:1.55}
+  pre code{background:none;padding:0;color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+  .callout strong{color:var(--green);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-mono);font-weight:500}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.warn strong{color:var(--amber)}
+  .nav{display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav a{display:flex;flex-direction:column;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;max-width:48%;transition:all 0.15s}
+  .nav a:hover{border-color:var(--accent);background:var(--surface2)}
+  .nav a.next{text-align:right;align-items:flex-end}
+  .nav .nav-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em}
+  .nav .nav-title{font-weight:600;font-size:0.92rem;margin-top:4px}
+  .nav .placeholder{visibility:hidden}
+  footer.tester-foot{margin-top:36px;font-size:0.78rem;color:var(--text-muted);text-align:center}
+  @media(max-width:520px){h1.lesson-h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly.</span>
+</div>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a href="/tester">Tester home</a> &nbsp;›&nbsp;
+    <a href="/tester/prompt-lessons">Prompt Lessons</a> &nbsp;›&nbsp;
+    Lesson 01
+  </div>
+
+  <div class="lesson-num">LESSON 01</div>
+  <h1 class="lesson-h1">What Is a Prompt, Really?</h1>
+
+  
+<p>A prompt is just the message you send to an AI. That's it. There's no special syntax, no magic words, no secret format.</p>
+
+<p>But here's the thing most people miss: the AI can only work with what you give it. It doesn't know what's in your head. It doesn't know what you mean. It only knows what you said.</p>
+
+<h2>Why phrasing matters</h2>
+
+<p>Watch what happens with two near-identical prompts:</p>
+
+<pre><code>Prompt A: "Write something about dogs."
+Prompt B: "Write a 200-word friendly intro for a dog-training blog
+           aimed at first-time owners."</code></pre>
+
+<p>Prompt A could come back as anything — a sonnet, a Wikipedia summary, a sales pitch. Prompt B comes back as exactly the thing you wanted, on the first try.</p>
+
+<p>The difference isn't that Prompt B is "better at AI." It's that Prompt B answered the four questions Prompt A left open: <em>How long? What tone? What format? Who is reading it?</em></p>
+
+<div class="callout">
+  <strong>Key insight</strong>
+  <p style="margin-top:6px;margin-bottom:0">If you're disappointed in an AI's answer, the fix is almost never "use a smarter AI." It's "tell it what you actually want."</p>
+</div>
+
+<h2>The 80% fix</h2>
+
+<p>Before you send any prompt, ask yourself one question: <strong>"Did I tell it what success looks like?"</strong></p>
+
+<p>If a stranger read your prompt with no context, would they know:</p>
+
+<ul>
+  <li>What kind of output you want (paragraph, list, table, code)</li>
+  <li>How long it should be</li>
+  <li>Who the audience is</li>
+  <li>What tone fits</li>
+</ul>
+
+<p>If any of those four are missing, the AI is guessing. Sometimes its guess is fine. Often it isn't. Adding even one of those four cuts the back-and-forth dramatically.</p>
+
+<h2>Try it</h2>
+
+<p>Open your AI tool. Send this:</p>
+
+<pre><code>Help me with my email.</code></pre>
+
+<p>Look at what comes back. Then send this:</p>
+
+<pre><code>Help me write a 3-sentence email to my landlord asking about
+the broken dishwasher. Polite but firm. I've already mentioned
+it twice.</code></pre>
+
+<p>Notice the difference. That's the whole game.</p>
+
+<h2>What's next</h2>
+
+<p>Lesson 02 builds on this with the single biggest mistake people make once they start being more specific: getting <em>too clever</em>.</p>
+
+
+  <nav class="nav">
+    <span class="placeholder"></span>
+    <a class="next" href="/tester/prompt-lessons/02-clarity-over-cleverness">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">02. Clarity Over Cleverness</span>
+      </a>
+  </nav>
+
+  <footer class="tester-foot">
+    Prompt Lessons © Pete Blozis · ActionForge Labs tester program
+  </footer>
+</div>
+</body>
+</html>

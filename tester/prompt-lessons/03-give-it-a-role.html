@@ -1,0 +1,160 @@
+<!--
+  Shared lesson template.
+  Each of the 8 lesson HTML files in this folder uses the same structure:
+    1. Tester banner (top)
+    2. Breadcrumb
+    3. Lesson number + title
+    4. Lesson body
+    5. Prev/Next navigation
+    6. Footer
+
+  All 8 share the styles defined here. To edit the visual style, edit only
+  this file and re-apply to the 8 lesson files via the build step or by
+  copying the <style> block.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Give It a Role — Prompt Lessons | ActionForge Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+  #tester-banner{background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);border-bottom:2px solid var(--amber);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);position:sticky;top:0;z-index:100}
+  #tester-banner .badge{background:var(--amber);color:#0d0f14;font-weight:600;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin:24px 0 18px}
+  .crumbs a{color:var(--accent);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .lesson-num{font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);letter-spacing:0.06em;margin-bottom:8px;margin-top:8px}
+  h1.lesson-h1{font-size:2rem;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+  h2{font-size:1.15rem;font-weight:600;margin:32px 0 12px;color:var(--text)}
+  h3{font-size:1rem;font-weight:600;margin:24px 0 8px;color:var(--text)}
+  p{margin-bottom:16px;color:var(--text);font-size:1rem}
+  .muted{color:var(--text-muted);font-size:0.92rem}
+  ul,ol{margin:0 0 18px 22px;color:var(--text)}
+  li{margin-bottom:6px}
+  blockquote{border-left:3px solid var(--accent);padding:10px 18px;margin:18px 0;background:rgba(79,156,249,0.06);color:var(--text-muted);font-style:italic;border-radius:0 var(--radius) var(--radius) 0}
+  code{font-family:var(--font-mono);font-size:0.88em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+  pre{font-family:var(--font-mono);font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:16px 0;overflow-x:auto;line-height:1.55}
+  pre code{background:none;padding:0;color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+  .callout strong{color:var(--green);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-mono);font-weight:500}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.warn strong{color:var(--amber)}
+  .nav{display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav a{display:flex;flex-direction:column;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;max-width:48%;transition:all 0.15s}
+  .nav a:hover{border-color:var(--accent);background:var(--surface2)}
+  .nav a.next{text-align:right;align-items:flex-end}
+  .nav .nav-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em}
+  .nav .nav-title{font-weight:600;font-size:0.92rem;margin-top:4px}
+  .nav .placeholder{visibility:hidden}
+  footer.tester-foot{margin-top:36px;font-size:0.78rem;color:var(--text-muted);text-align:center}
+  @media(max-width:520px){h1.lesson-h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly.</span>
+</div>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a href="/tester">Tester home</a> &nbsp;›&nbsp;
+    <a href="/tester/prompt-lessons">Prompt Lessons</a> &nbsp;›&nbsp;
+    Lesson 03
+  </div>
+
+  <div class="lesson-num">LESSON 03</div>
+  <h1 class="lesson-h1">Give It a Role</h1>
+
+  
+<p>One of the most useful tricks in prompting is also one of the most over-prescribed: tell the AI who it should be when answering you.</p>
+
+<pre><code>"You are a pediatric nurse with 20 years of experience.
+A new parent asks you about a toddler's fever..."</code></pre>
+
+<p>This is "role-setting" or "persona prompting," and when used well, it changes the AI's vocabulary, depth, tone, and what it considers worth mentioning.</p>
+
+<h2>Why it works</h2>
+
+<p>Roles compress a lot of context into a few words. "Pediatric nurse" tells the AI: <em>medically careful, parent-friendly, knows what symptoms warrant a doctor visit, won't make jokes</em>. You'd have to say all that explicitly otherwise.</p>
+
+<h2>When it backfires</h2>
+
+<p>Role-setting goes wrong in three ways:</p>
+
+<h3>1. The role is vague</h3>
+
+<p>"Act as an expert" — expert in what? Every field has experts. "Expert" alone is just a word.</p>
+
+<pre><code>Bad:  "Act as an expert and review my code."
+Good: "Act as a senior backend engineer reviewing a junior dev's
+       Python pull request. Look for bugs, style issues, and
+       performance problems. Be direct but constructive."</code></pre>
+
+<h3>2. The role conflicts with the actual task</h3>
+
+<p>Telling the AI to be "a witty stand-up comedian" and then asking it to draft a legal contract gets you a confused, tonally weird contract.</p>
+
+<h3>3. You stack too many roles</h3>
+
+<pre><code>"You are a Harvard MBA, a Y Combinator partner, a former
+McKinsey consultant, and a published author..."</code></pre>
+
+<p>The more roles you stack, the more diluted each becomes. Pick one role that fits the task. One.</p>
+
+<div class="callout">
+  <strong>When to skip role-setting entirely</strong>
+  <p style="margin-top:6px;margin-bottom:0">For simple tasks — "summarize this paragraph," "fix this typo," "what's 17% of 240" — adding a role just adds noise. Save it for tasks where tone, depth, or domain knowledge matter.</p>
+</div>
+
+<h2>The role-task fit checklist</h2>
+
+<p>Before you write a role into your prompt, ask:</p>
+
+<ul>
+  <li><strong>Does the task have a clear ideal answerer?</strong> (e.g. a nutritionist for diet questions, a tax accountant for tax questions). If yes, name that role.</li>
+  <li><strong>Does the role have a known voice?</strong> "A patient kindergarten teacher" carries a voice. "A subject matter expert" doesn't.</li>
+  <li><strong>Does the role match the audience?</strong> If you're writing for kids, "act as a children's book author" works. "Act as a PhD researcher" doesn't.</li>
+</ul>
+
+<h2>A pattern that almost always works</h2>
+
+<pre><code>"You are a [specific role] writing for [specific audience].
+The reader knows [what they already know]. They want to learn
+[what they don't know]. Avoid [known pitfall].
+
+Now: [the actual task]"</code></pre>
+
+<p>That four-line scaffold turns vague requests into reliable output. Try it once and you'll feel the difference.</p>
+
+<h2>What's next</h2>
+
+<p>Lesson 04 is about examples — why one good example beats three paragraphs of explanation, and how to build examples that the AI actually learns from.</p>
+
+
+  <nav class="nav">
+    <a href="/tester/prompt-lessons/02-clarity-over-cleverness">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">02. Clarity Over Cleverness</span>
+      </a>
+    <a class="next" href="/tester/prompt-lessons/04-show-dont-tell">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">04. Show, Don't Tell — Examples</span>
+      </a>
+  </nav>
+
+  <footer class="tester-foot">
+    Prompt Lessons © Pete Blozis · ActionForge Labs tester program
+  </footer>
+</div>
+</body>
+</html>

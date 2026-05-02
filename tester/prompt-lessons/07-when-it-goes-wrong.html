@@ -1,0 +1,171 @@
+<!--
+  Shared lesson template.
+  Each of the 8 lesson HTML files in this folder uses the same structure:
+    1. Tester banner (top)
+    2. Breadcrumb
+    3. Lesson number + title
+    4. Lesson body
+    5. Prev/Next navigation
+    6. Footer
+
+  All 8 share the styles defined here. To edit the visual style, edit only
+  this file and re-apply to the 8 lesson files via the build step or by
+  copying the <style> block.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>When It Goes Wrong — Prompt Lessons | ActionForge Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+  #tester-banner{background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);border-bottom:2px solid var(--amber);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);position:sticky;top:0;z-index:100}
+  #tester-banner .badge{background:var(--amber);color:#0d0f14;font-weight:600;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin:24px 0 18px}
+  .crumbs a{color:var(--accent);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .lesson-num{font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);letter-spacing:0.06em;margin-bottom:8px;margin-top:8px}
+  h1.lesson-h1{font-size:2rem;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+  h2{font-size:1.15rem;font-weight:600;margin:32px 0 12px;color:var(--text)}
+  h3{font-size:1rem;font-weight:600;margin:24px 0 8px;color:var(--text)}
+  p{margin-bottom:16px;color:var(--text);font-size:1rem}
+  .muted{color:var(--text-muted);font-size:0.92rem}
+  ul,ol{margin:0 0 18px 22px;color:var(--text)}
+  li{margin-bottom:6px}
+  blockquote{border-left:3px solid var(--accent);padding:10px 18px;margin:18px 0;background:rgba(79,156,249,0.06);color:var(--text-muted);font-style:italic;border-radius:0 var(--radius) var(--radius) 0}
+  code{font-family:var(--font-mono);font-size:0.88em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+  pre{font-family:var(--font-mono);font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:16px 0;overflow-x:auto;line-height:1.55}
+  pre code{background:none;padding:0;color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+  .callout strong{color:var(--green);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-mono);font-weight:500}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.warn strong{color:var(--amber)}
+  .nav{display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav a{display:flex;flex-direction:column;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;max-width:48%;transition:all 0.15s}
+  .nav a:hover{border-color:var(--accent);background:var(--surface2)}
+  .nav a.next{text-align:right;align-items:flex-end}
+  .nav .nav-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em}
+  .nav .nav-title{font-weight:600;font-size:0.92rem;margin-top:4px}
+  .nav .placeholder{visibility:hidden}
+  footer.tester-foot{margin-top:36px;font-size:0.78rem;color:var(--text-muted);text-align:center}
+  @media(max-width:520px){h1.lesson-h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly.</span>
+</div>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a href="/tester">Tester home</a> &nbsp;›&nbsp;
+    <a href="/tester/prompt-lessons">Prompt Lessons</a> &nbsp;›&nbsp;
+    Lesson 07
+  </div>
+
+  <div class="lesson-num">LESSON 07</div>
+  <h1 class="lesson-h1">When It Goes Wrong</h1>
+
+  
+<p>This is the lesson nobody wants to teach but everyone needs.</p>
+
+<p>AI tools confidently say wrong things. Confidently. The same friendly, fluent tone they use for correct answers, they use for completely fabricated ones. Learning to spot this is a survival skill.</p>
+
+<h2>The three failure modes</h2>
+
+<h3>1. Hallucination</h3>
+
+<p>The AI invents facts. Names a study that doesn't exist. Quotes a person who never said it. Cites a law that isn't real.</p>
+
+<p>This isn't malice — the AI doesn't know what's true. It produces text that <em>looks like</em> what a true answer would look like. Sometimes that overlaps with reality. Sometimes it doesn't.</p>
+
+<h3>2. Confident vagueness</h3>
+
+<p>The answer sounds smart but says nothing. "It depends on a variety of factors including market dynamics, regulatory considerations, and stakeholder alignment." That sentence has zero information in it.</p>
+
+<p>This often happens when the AI doesn't actually know but doesn't want to say "I don't know."</p>
+
+<h3>3. Outdated information</h3>
+
+<p>AIs have training cutoffs. Anything that changed after the cutoff might be answered with old info — confidently.</p>
+
+<h2>The three quick checks</h2>
+
+<p>Before you trust an AI answer enough to act on it, run these:</p>
+
+<h3>Check 1: "Could I verify this?"</h3>
+
+<p>If the AI cites a fact, name, statistic, quote, study, law, or specific event — could you check it? If yes, check it before using it. If you can't easily check, treat the claim as unverified.</p>
+
+<h3>Check 2: "Is the answer specific or vague?"</h3>
+
+<p>If the answer is full of words like "varies," "depends," "many factors," "complex landscape" — that's a signal the AI is hedging because it doesn't actually know. Push it: "Give me specifics, not generalities."</p>
+
+<h3>Check 3: "Did the answer match the question?"</h3>
+
+<p>Sometimes the AI subtly shifts the topic to something it knows better. You asked about A, it answered about B. Re-read your prompt and re-read the answer. They should be about the same thing.</p>
+
+<div class="callout warn">
+  <strong>The danger zone</strong>
+  <p style="margin-top:6px;margin-bottom:0">Medical, legal, financial, and any safety-critical answer needs human expert review. The AI is a starting point, not the answer. "Confidently wrong about your medication dose" is the worst-case scenario for AI misuse.</p>
+</div>
+
+<h2>Pushing back productively</h2>
+
+<p>If you suspect the AI is wrong, ask it directly:</p>
+
+<pre><code>"Are you sure about that? What's your source?"
+
+"Could that be outdated? When was your training cutoff?"
+
+"Is there any chance you're hallucinating that name/study/law?"</code></pre>
+
+<p>The AI will often back down and admit uncertainty when challenged. That's useful information.</p>
+
+<h2>The "I don't know" prompt</h2>
+
+<p>Add this to your prompts when accuracy matters:</p>
+
+<pre><code>"If you're not sure about something, say 'I'm not sure'
+ instead of guessing. I'd rather have a partial answer
+ than a confident wrong one."</code></pre>
+
+<p>This actually changes how the AI behaves. It'll start flagging its own uncertainty instead of papering over it.</p>
+
+<h2>The mindset shift</h2>
+
+<p>Treat AI like a brilliant but unreliable assistant. Use it for first drafts, brainstorming, summarizing, exploring options. Verify before acting. Always.</p>
+
+<p>That's not a flaw of AI — it's how to use any tool. You wouldn't trust a calculator without checking the inputs. Same here.</p>
+
+<h2>What's next</h2>
+
+<p>Lesson 08 is the final lesson — building a personal prompt library. How to save what works so you don't have to invent every prompt from scratch.</p>
+
+
+  <nav class="nav">
+    <a href="/tester/prompt-lessons/06-iterating-not-redoing">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">06. Iterating, Not Redoing</span>
+      </a>
+    <a class="next" href="/tester/prompt-lessons/08-building-a-prompt-library">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">08. Building a Prompt Library</span>
+      </a>
+  </nav>
+
+  <footer class="tester-foot">
+    Prompt Lessons © Pete Blozis · ActionForge Labs tester program
+  </footer>
+</div>
+</body>
+</html>

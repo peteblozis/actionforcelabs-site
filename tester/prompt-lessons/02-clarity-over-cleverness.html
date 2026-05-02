@@ -1,0 +1,155 @@
+<!--
+  Shared lesson template.
+  Each of the 8 lesson HTML files in this folder uses the same structure:
+    1. Tester banner (top)
+    2. Breadcrumb
+    3. Lesson number + title
+    4. Lesson body
+    5. Prev/Next navigation
+    6. Footer
+
+  All 8 share the styles defined here. To edit the visual style, edit only
+  this file and re-apply to the 8 lesson files via the build step or by
+  copying the <style> block.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Clarity Over Cleverness — Prompt Lessons | ActionForge Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+  #tester-banner{background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);border-bottom:2px solid var(--amber);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);position:sticky;top:0;z-index:100}
+  #tester-banner .badge{background:var(--amber);color:#0d0f14;font-weight:600;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+  .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin:24px 0 18px}
+  .crumbs a{color:var(--accent);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .lesson-num{font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);letter-spacing:0.06em;margin-bottom:8px;margin-top:8px}
+  h1.lesson-h1{font-size:2rem;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+  h2{font-size:1.15rem;font-weight:600;margin:32px 0 12px;color:var(--text)}
+  h3{font-size:1rem;font-weight:600;margin:24px 0 8px;color:var(--text)}
+  p{margin-bottom:16px;color:var(--text);font-size:1rem}
+  .muted{color:var(--text-muted);font-size:0.92rem}
+  ul,ol{margin:0 0 18px 22px;color:var(--text)}
+  li{margin-bottom:6px}
+  blockquote{border-left:3px solid var(--accent);padding:10px 18px;margin:18px 0;background:rgba(79,156,249,0.06);color:var(--text-muted);font-style:italic;border-radius:0 var(--radius) var(--radius) 0}
+  code{font-family:var(--font-mono);font-size:0.88em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+  pre{font-family:var(--font-mono);font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:16px 0;overflow-x:auto;line-height:1.55}
+  pre code{background:none;padding:0;color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+  .callout strong{color:var(--green);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-mono);font-weight:500}
+  .callout.warn{border-left-color:var(--amber)}
+  .callout.warn strong{color:var(--amber)}
+  .nav{display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav a{display:flex;flex-direction:column;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;flex:1;max-width:48%;transition:all 0.15s}
+  .nav a:hover{border-color:var(--accent);background:var(--surface2)}
+  .nav a.next{text-align:right;align-items:flex-end}
+  .nav .nav-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em}
+  .nav .nav-title{font-weight:600;font-size:0.92rem;margin-top:4px}
+  .nav .placeholder{visibility:hidden}
+  footer.tester-foot{margin-top:36px;font-size:0.78rem;color:var(--text-muted);text-align:center}
+  @media(max-width:520px){h1.lesson-h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly.</span>
+</div>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a href="/tester">Tester home</a> &nbsp;›&nbsp;
+    <a href="/tester/prompt-lessons">Prompt Lessons</a> &nbsp;›&nbsp;
+    Lesson 02
+  </div>
+
+  <div class="lesson-num">LESSON 02</div>
+  <h1 class="lesson-h1">Clarity Over Cleverness</h1>
+
+  
+<p>Once you learn that prompts work better when they're specific, there's a temptation to overdo it. To get fancy. To add words like "expertly" and "with deep insight" and "as a world-class authority."</p>
+
+<p>Don't.</p>
+
+<p>The best prompts read like instructions you'd give a smart intern who's never met you. Plain language. Clear nouns. No hidden assumptions.</p>
+
+<h2>What "clever" looks like (and why it backfires)</h2>
+
+<pre><code>Bad: "Craft a masterful and engaging treatise that artfully
+      explores the multifaceted dimensions of remote work."</code></pre>
+
+<p>That sentence has zero useful information in it. "Masterful" — masterful by whose standard? "Engaging" — engaging to whom? "Multifaceted dimensions" means nothing.</p>
+
+<pre><code>Good: "Write a 400-word blog intro about the trade-offs of
+       remote work. Audience: small business owners. Tone:
+       practical, not preachy. End with a question to the reader."</code></pre>
+
+<p>Notice the second one is longer in word count but actually shorter in fluff. Every word does work.</p>
+
+<h2>The "smart intern" test</h2>
+
+<p>Read your prompt out loud. Imagine you're handing it to a competent human you just met. If they'd ask follow-up questions, your prompt is missing something.</p>
+
+<div class="callout">
+  <strong>Pete's rule</strong>
+  <p style="margin-top:6px;margin-bottom:0">When you're tempted to add an adjective, replace it with a sentence of detail instead. "Engaging" → "make the reader want to keep reading by opening with a specific story." That's actionable. "Engaging" isn't.</p>
+</div>
+
+<h2>Hidden assumptions kill more prompts than any other mistake</h2>
+
+<p>Watch this:</p>
+
+<pre><code>"Summarize my notes."</code></pre>
+
+<p>What's the AI supposed to summarize? You haven't given it any notes. It'll either ask for them, hallucinate some, or summarize nothing. None of those is what you wanted.</p>
+
+<pre><code>"Summarize the meeting notes I'm pasting below into 5 bullet
+points, keeping any decisions and action items.
+
+[paste notes here]"</code></pre>
+
+<p>Now it has the input AND knows what shape the output should take.</p>
+
+<h2>Concrete &gt; Abstract</h2>
+
+<p>Whenever you have a choice between abstract and concrete, pick concrete:</p>
+
+<ul>
+  <li>"Make it shorter" → "Cut it to 150 words"</li>
+  <li>"Make it more professional" → "Use formal verbs and remove all contractions"</li>
+  <li>"Improve the structure" → "Add a heading every 3 paragraphs"</li>
+</ul>
+
+<p>The AI can act on the right side. It has to guess at the left side.</p>
+
+<h2>What's next</h2>
+
+<p>Lesson 03 covers role-setting — the trick of telling the AI <em>who</em> it should be when answering. It's powerful but easy to misuse.</p>
+
+
+  <nav class="nav">
+    <a href="/tester/prompt-lessons/01-what-is-a-prompt">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">01. What Is a Prompt, Really?</span>
+      </a>
+    <a class="next" href="/tester/prompt-lessons/03-give-it-a-role">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">03. Give It a Role</span>
+      </a>
+  </nav>
+
+  <footer class="tester-foot">
+    Prompt Lessons © Pete Blozis · ActionForge Labs tester program
+  </footer>
+</div>
+</body>
+</html>

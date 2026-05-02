@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Prompt Lessons — Tester Area | ActionForge Labs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;
+      --border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;
+      --text-muted:#7a8099;--text-dim:#4a5068;
+      --accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;
+      --radius:10px;--radius-lg:16px;
+      --font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+
+    #tester-banner{
+      background:repeating-linear-gradient(-45deg,#1c1400 0 20px,#201800 20px 40px);
+      border-bottom:2px solid var(--amber);padding:10px 24px;
+      display:flex;align-items:center;gap:12px;
+      font-family:var(--font-mono);font-size:0.78rem;color:var(--amber);
+      position:sticky;top:0;z-index:100;
+    }
+    #tester-banner .badge{
+      background:var(--amber);color:#0d0f14;font-weight:600;
+      padding:2px 10px;border-radius:4px;letter-spacing:0.08em;
+    }
+
+    .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+
+    header.app-header{padding:36px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+    header h1{font-size:2rem;font-weight:700;letter-spacing:-0.03em;display:flex;align-items:center;gap:14px}
+    header .logo{width:40px;height:40px;background:rgba(79,156,249,0.18);border:1.5px solid var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+    header .subtitle{color:var(--text-muted);font-size:0.95rem;margin-top:8px;padding-left:54px;max-width:680px}
+
+    .crumbs{font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:24px}
+    .crumbs a{color:var(--accent);text-decoration:none}
+    .crumbs a:hover{text-decoration:underline}
+
+    .intro{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+      padding:24px 28px;margin-bottom:32px;
+    }
+    .intro h2{font-size:1.1rem;font-weight:600;margin-bottom:10px}
+    .intro p{color:var(--text-muted);font-size:0.95rem}
+
+    .lesson-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+      gap:14px;
+    }
+    .lesson-card{
+      display:block;text-decoration:none;color:inherit;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius-lg);padding:22px 24px;
+      transition:all 0.15s;
+      position:relative;
+    }
+    .lesson-card:hover{border-color:var(--accent);background:var(--surface2);transform:translateY(-1px)}
+    .lesson-num{
+      font-family:var(--font-mono);font-size:0.78rem;color:var(--accent);
+      letter-spacing:0.06em;margin-bottom:8px;
+    }
+    .lesson-title{font-size:1.05rem;font-weight:600;margin-bottom:8px;line-height:1.3}
+    .lesson-desc{font-size:0.88rem;color:var(--text-muted);line-height:1.55}
+    .lesson-meta{
+      display:flex;gap:12px;margin-top:14px;
+      font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);
+    }
+    .lesson-meta .pill{padding:2px 7px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+
+    footer.tester-foot{
+      margin-top:48px;padding-top:24px;border-top:1px solid var(--border);
+      font-size:0.82rem;color:var(--text-muted);text-align:center;
+    }
+
+    @media(max-width:640px){header h1{font-size:1.5rem}}
+  </style>
+</head>
+<body>
+
+<div id="tester-banner">
+  <span class="badge">🧪 TESTER AREA</span>
+  <span>Approved testers only. Do not share these pages publicly. Feedback welcome.</span>
+</div>
+
+<div class="wrap">
+
+  <header class="app-header">
+    <h1>
+      <span class="logo">📚</span>
+      Prompt Lessons
+    </h1>
+    <p class="subtitle">A short, hands-on series for learning how to talk to AI clearly. Eight lessons. Each builds on the last. Work through them in order or jump to whichever you need.</p>
+  </header>
+
+  <div class="crumbs">
+    <a href="/tester">← Tester home</a>
+  </div>
+
+  <div class="intro">
+    <h2>How to use this series</h2>
+    <p>Each lesson is short — about 5 minutes to read, 10–15 to practice. Pause and try the examples in your own AI tool. Send feedback to Pete via the tester feedback form. The lessons are revised based on what testers find confusing, so your input directly shapes the final product.</p>
+  </div>
+
+  <div class="lesson-grid">
+
+    <a class="lesson-card" href="/tester/prompt-lessons/01-what-is-a-prompt">
+      <div class="lesson-num">LESSON 01</div>
+      <div class="lesson-title">What Is a Prompt, Really?</div>
+      <div class="lesson-desc">The simplest definition, why phrasing matters, and the single change that fixes 80% of bad results.</div>
+      <div class="lesson-meta"><span class="pill">5 min</span><span class="pill">Foundation</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/02-clarity-over-cleverness">
+      <div class="lesson-num">LESSON 02</div>
+      <div class="lesson-title">Clarity Over Cleverness</div>
+      <div class="lesson-desc">Why the most effective prompts are boring. Plain language, specific nouns, no hidden assumptions.</div>
+      <div class="lesson-meta"><span class="pill">6 min</span><span class="pill">Foundation</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/03-give-it-a-role">
+      <div class="lesson-num">LESSON 03</div>
+      <div class="lesson-title">Give It a Role</div>
+      <div class="lesson-desc">How role-setting steers tone, depth, and vocabulary — and when to skip it because it backfires.</div>
+      <div class="lesson-meta"><span class="pill">7 min</span><span class="pill">Technique</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/04-show-dont-tell">
+      <div class="lesson-num">LESSON 04</div>
+      <div class="lesson-title">Show, Don't Tell — Examples</div>
+      <div class="lesson-desc">Why one good example beats three paragraphs of instruction. How to construct examples that actually transfer.</div>
+      <div class="lesson-meta"><span class="pill">8 min</span><span class="pill">Technique</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/05-constraints-and-format">
+      <div class="lesson-num">LESSON 05</div>
+      <div class="lesson-title">Constraints and Format</div>
+      <div class="lesson-desc">Asking for the shape of the answer — length, structure, headings, tables, bullet rules.</div>
+      <div class="lesson-meta"><span class="pill">7 min</span><span class="pill">Technique</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/06-iterating-not-redoing">
+      <div class="lesson-num">LESSON 06</div>
+      <div class="lesson-title">Iterating, Not Redoing</div>
+      <div class="lesson-desc">How to refine an answer in the same conversation instead of starting over. The "fix this one thing" pattern.</div>
+      <div class="lesson-meta"><span class="pill">8 min</span><span class="pill">Workflow</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/07-when-it-goes-wrong">
+      <div class="lesson-num">LESSON 07</div>
+      <div class="lesson-title">When It Goes Wrong</div>
+      <div class="lesson-desc">Recognizing hallucinations, vague answers, and over-confidence. Three quick checks before you trust an answer.</div>
+      <div class="lesson-meta"><span class="pill">9 min</span><span class="pill">Critical thinking</span></div>
+    </a>
+
+    <a class="lesson-card" href="/tester/prompt-lessons/08-building-a-prompt-library">
+      <div class="lesson-num">LESSON 08</div>
+      <div class="lesson-title">Building a Prompt Library</div>
+      <div class="lesson-desc">Save what works. Templating common requests. The Pete-tested system for keeping prompts you'll actually reuse.</div>
+      <div class="lesson-meta"><span class="pill">10 min</span><span class="pill">Workflow</span></div>
+    </a>
+
+  </div>
+
+  <footer class="tester-foot">
+    <p>Tester program. © ActionForge Labs. All Prompt Lessons content © Pete Blozis.</p>
+    <p style="margin-top:6px">Questions or feedback? Use the tester feedback form on the <a href="/tester" style="color:var(--accent)">tester home page</a>.</p>
+  </footer>
+
+</div>
+</body>
+</html>
