@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Owner Dashboard — SageForge Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0d0f14;--surface:#13161e;--surface2:#1c2030;--border:#272c3d;--border-hi:#3a4060;--text:#e8eaf0;--text-muted:#7a8099;--text-dim:#4a5068;--accent:#4f9cf9;--green:#3ecf8e;--amber:#f9b84f;--gold:#f9d44f;--red:#f95f5f;--radius:10px;--radius-lg:16px;--font-body:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+
+  #owner-banner{background:repeating-linear-gradient(-45deg,#0a0f00 0 20px,#0d1300 20px 40px);border-bottom:2px solid var(--green);padding:10px 24px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--green);position:sticky;top:0;z-index:100}
+  #owner-banner .badge{background:var(--green);color:#0d0f14;font-weight:700;padding:2px 10px;border-radius:4px;letter-spacing:0.08em}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px 80px}
+
+  header{padding:36px 0 28px;border-bottom:1px solid var(--border);margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  header .left h1{font-size:1.9rem;font-weight:700;letter-spacing:-0.03em;display:flex;align-items:center;gap:14px}
+  header .left .logo{width:42px;height:42px;background:rgba(249,212,79,0.15);border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  header .left p{color:var(--text-muted);font-size:0.9rem;margin-top:6px;padding-left:56px}
+  .time{font-family:var(--font-mono);font-size:0.82rem;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);padding:8px 14px;border-radius:var(--radius)}
+
+  .section-title{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;margin-top:32px}
+
+  .link-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:8px}
+
+  .link-card{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;text-decoration:none;color:inherit;transition:all 0.15s;cursor:pointer}
+  .link-card:hover{border-color:var(--border-hi);background:var(--surface2);transform:translateY(-1px)}
+  .link-card.green{border-left:3px solid var(--green)}
+  .link-card.amber{border-left:3px solid var(--amber)}
+  .link-card.accent{border-left:3px solid var(--accent)}
+  .link-card.gold{border-left:3px solid var(--gold)}
+  .link-card.red{border-left:3px solid var(--red)}
+
+  .card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+  .card-icon.green{background:rgba(62,207,142,0.15)}
+  .card-icon.amber{background:rgba(249,184,79,0.15)}
+  .card-icon.accent{background:rgba(79,156,249,0.15)}
+  .card-icon.gold{background:rgba(249,212,79,0.15)}
+  .card-icon.red{background:rgba(249,95,95,0.15)}
+
+  .card-body{flex:1;min-width:0}
+  .card-name{font-size:0.95rem;font-weight:600;margin-bottom:2px}
+  .card-url{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-tag{font-family:var(--font-mono);font-size:0.68rem;padding:1px 6px;border-radius:3px;font-weight:600;margin-left:8px;vertical-align:middle}
+  .tag-live{background:rgba(62,207,142,0.2);color:var(--green)}
+  .tag-soon{background:rgba(79,156,249,0.15);color:var(--accent)}
+  .tag-ext{background:rgba(249,212,79,0.15);color:var(--gold)}
+
+  .arrow{color:var(--text-dim);font-size:1rem;flex-shrink:0}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:8px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+  .stat-val{font-family:var(--font-mono);font-size:1.5rem;font-weight:500;color:var(--green)}
+  .stat-label{font-size:0.78rem;color:var(--text-muted);margin-top:2px}
+
+  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text-dim);font-family:var(--font-mono);text-align:center}
+
+  @media(max-width:640px){header{flex-direction:column;align-items:flex-start}.link-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="owner-banner">
+  <span class="badge">👑 OWNER</span>
+  <span>SageForge Core — Admin Dashboard · Pete Blozis · All systems</span>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="left">
+      <h1><span class="logo">👑</span> Owner Dashboard</h1>
+      <p>SageForge Core · Full access to all ActionForge Labs systems</p>
+    </div>
+    <div class="time" id="clock">--:-- --</div>
+  </header>
+
+  <!-- ── System Status ─────────────────────────────── -->
+  <div class="section-title">System Status</div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-val">LIVE</div><div class="stat-label">Tester Program</div></div>
+    <div class="stat"><div class="stat-val">8</div><div class="stat-label">Prompt Lessons</div></div>
+    <div class="stat"><div class="stat-val">7</div><div class="stat-label">Access Apps</div></div>
+    <div class="stat"><div class="stat-val">2</div><div class="stat-label">Approved Testers</div></div>
+  </div>
+
+  <!-- ── Live Sites ─────────────────────────────────── -->
+  <div class="section-title">Live Sites — Click to Open</div>
+  <div class="link-grid">
+
+    <a class="link-card green" href="https://sage.actionforgelabs.com/tester/" target="_blank">
+      <div class="card-icon green">🧪</div>
+      <div class="card-body">
+        <div class="card-name">Tester Area <span class="card-tag tag-live">LIVE</span></div>
+        <div class="card-url">sage.actionforgelabs.com/tester/</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card green" href="https://sage.actionforgelabs.com/tester/prompt-lessons/" target="_blank">
+      <div class="card-icon green">📚</div>
+      <div class="card-body">
+        <div class="card-name">Prompt Lessons <span class="card-tag tag-live">LIVE</span></div>
+        <div class="card-url">sage.actionforgelabs.com/tester/prompt-lessons/</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card gold" href="https://actionforgelabs.com" target="_blank">
+      <div class="card-icon gold">🌐</div>
+      <div class="card-body">
+        <div class="card-name">Public Front Page <span class="card-tag tag-live">LIVE</span></div>
+        <div class="card-url">actionforgelabs.com</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card accent" href="https://core.actionforgelabs.com" target="_blank">
+      <div class="card-icon accent">⚙️</div>
+      <div class="card-body">
+        <div class="card-name">SageForge Core <span class="card-tag tag-live">LIVE</span></div>
+        <div class="card-url">core.actionforgelabs.com</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+  </div>
+
+  <!-- ── Coming Soon ───────────────────────────────── -->
+  <div class="section-title">Coming Soon</div>
+  <div class="link-grid">
+
+    <a class="link-card accent" href="https://actionforgelabs.com/customer/" target="_blank">
+      <div class="card-icon accent">👥</div>
+      <div class="card-body">
+        <div class="card-name">Customer Portal <span class="card-tag tag-soon">SOON</span></div>
+        <div class="card-url">actionforgelabs.com/customer/</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card accent" href="https://actionforgelabs.com/products/" target="_blank">
+      <div class="card-icon accent">🛍️</div>
+      <div class="card-body">
+        <div class="card-name">Products Overview <span class="card-tag tag-soon">SOON</span></div>
+        <div class="card-url">actionforgelabs.com/products/</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card amber" href="https://actionforgelabs.com/internal/" target="_blank">
+      <div class="card-icon amber">🔒</div>
+      <div class="card-body">
+        <div class="card-name">Internal Area <span class="card-tag tag-soon">SOON</span></div>
+        <div class="card-url">actionforgelabs.com/internal/</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+  </div>
+
+  <!-- ── Admin Tools ───────────────────────────────── -->
+  <div class="section-title">Admin Tools</div>
+  <div class="link-grid">
+
+    <a class="link-card gold" href="https://dash.cloudflare.com/3cecd36e3324a1e91f993b3c6fe092bf/one/access-controls/apps" target="_blank">
+      <div class="card-icon gold">☁️</div>
+      <div class="card-body">
+        <div class="card-name">Cloudflare Access Apps <span class="card-tag tag-ext">EXT</span></div>
+        <div class="card-url">dash.cloudflare.com → Access controls</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card gold" href="https://dash.cloudflare.com/3cecd36e3324a1e91f993b3c6fe092bf/pages" target="_blank">
+      <div class="card-icon gold">📄</div>
+      <div class="card-body">
+        <div class="card-name">Cloudflare Pages <span class="card-tag tag-ext">EXT</span></div>
+        <div class="card-url">dash.cloudflare.com → Workers & Pages</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card gold" href="https://github.com/peteblozis/actionforcelabs-site" target="_blank">
+      <div class="card-icon gold">🐙</div>
+      <div class="card-body">
+        <div class="card-name">GitHub Repo <span class="card-tag tag-ext">EXT</span></div>
+        <div class="card-url">github.com/peteblozis/actionforcelabs-site</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+    <a class="link-card red" href="https://dash.cloudflare.com/3cecd36e3324a1e91f993b3c6fe092bf/one/access-controls/apps/self-hosted/bc92a255-a322-437d-b737-7662126ed315/edit" target="_blank">
+      <div class="card-icon red">🛡️</div>
+      <div class="card-body">
+        <div class="card-name">Tester Access Policy</div>
+        <div class="card-url">Add / remove tester emails</div>
+      </div>
+      <div class="arrow">↗</div>
+    </a>
+
+  </div>
+
+  <!-- ── Approved Testers ──────────────────────────── -->
+  <div class="section-title">Approved Testers</div>
+  <div class="link-grid">
+    <div class="link-card green" style="cursor:default">
+      <div class="card-icon gold">👑</div>
+      <div class="card-body">
+        <div class="card-name">Pete Blozis <span class="card-tag tag-live">OWNER</span></div>
+        <div class="card-url">peteblozis@gmail.com</div>
+      </div>
+    </div>
+    <div class="link-card green" style="cursor:default">
+      <div class="card-icon green">👨‍👦</div>
+      <div class="card-body">
+        <div class="card-name">Pete Jr <span class="card-tag tag-live">FAMILY</span></div>
+        <div class="card-url">p.blozis.jr@gmail.com</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    SageForge Core · Owner Dashboard · Pete Blozis only · Do not share this URL
+  </footer>
+
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZoneName: 'short'
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
