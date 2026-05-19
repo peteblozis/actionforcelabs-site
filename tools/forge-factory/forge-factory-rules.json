@@ -1,0 +1,23 @@
+{
+  "name": "Forge Factory Governance Rules",
+  "version": "1.0",
+  "purpose": "Prevent private/internal ActionForge Labs wording from appearing on public pages.",
+  "forbiddenPublicPhrases": [
+    "SageForge Core",
+    "SageForge v9",
+    "actionforcelabs",
+    "ActionForceLabs"
+  ],
+  "publicPaths": [
+    "index.html",
+    "public/"
+  ],
+  "protectedAllowedPaths": [
+    "tester/",
+    "public/admin/",
+    "sageforge/",
+    ".github/",
+    "tools/"
+  ],
+  "requiredOutcome": "Fail governance scan if forbidden phrases appear in public paths."
+}
