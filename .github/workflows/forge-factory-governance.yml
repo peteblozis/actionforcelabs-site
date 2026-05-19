@@ -15,4 +15,4 @@ jobs:
       - name: Run Forge Factory public exposure scan
         shell: pwsh
         run: |
-          ./tools/forge-factory/tools/forge-factory/scan-public-exposure.ps1
+        ./tools/forge-factory/scan-public-exposure.ps1
