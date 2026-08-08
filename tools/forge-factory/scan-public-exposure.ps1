@@ -16,11 +16,23 @@ function Resolve-RepositoryPath {
     return Join-Path $repoRoot $Path
 }
 
+function Normalize-RepositoryPath {
+    param([string]$Path)
+
+    return $Path.Replace(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [char]"/"
+    ).Replace(
+        [System.IO.Path]::AltDirectorySeparatorChar,
+        [char]"/"
+    ).TrimStart([char]"/")
+}
+
 function Get-RelativeRepositoryPath {
     param([string]$Path)
 
     $relativePath = [System.IO.Path]::GetRelativePath($repoRoot, $Path)
-    return $relativePath.Replace("\\", "/")
+    return Normalize-RepositoryPath $relativePath
 }
 
 $resolvedRulesPath = Resolve-RepositoryPath $RulesPath
@@ -56,7 +68,7 @@ foreach ($configuredPath in $rules.publicPaths) {
         $relativePath = Get-RelativeRepositoryPath $file.FullName
         $isProtected = $false
         foreach ($protectedPath in $rules.protectedAllowedPaths) {
-            $normalizedProtectedPath = $protectedPath.Replace("\\", "/").TrimStart("/")
+            $normalizedProtectedPath = Normalize-RepositoryPath $protectedPath
             if ($relativePath.StartsWith($normalizedProtectedPath, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $isProtected = $true
                 break
