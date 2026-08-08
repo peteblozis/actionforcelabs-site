@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title> - Command Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ActionForge Labs - Command Center</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
-      
       margin: 0;
       background: #f4f6f8;
       color: #111;
     }
-    .header {f
+    .header {
       background: #0b1f33;
       color: white;
       padding: 24px 32px;
@@ -22,7 +24,7 @@
       font-size: 34px;
     }
     .header p {
-      margin: 8px 0 0 0;
+      margin: 8px 0 0;
       font-size: 18px;
       color: #c7d4e2;
     }
@@ -31,18 +33,21 @@
     }
     .statusbar {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
       margin-bottom: 28px;
     }
-    .stat {
+    .stat,
+    .card {
       background: white;
       border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    }
+    .stat {
       padding: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
     .stat h3 {
-      margin: 0 0 8px 0;
+      margin: 0 0 8px;
       font-size: 16px;
       color: #444;
     }
@@ -53,14 +58,11 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
     }
     .card {
-      background: white;
-      border-radius: 12px;
       padding: 22px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
     .card h2 {
       margin-top: 0;
@@ -94,16 +96,26 @@
       color: #0b5cab;
       text-decoration: none;
     }
+    @media (max-width: 760px) {
+      .statusbar,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .header,
+      .wrap {
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>SageForge v9 - Command Center</h1>
+  <header class="header">
+    <h1>ActionForge Labs - Command Center</h1>
     <p>Mission Control for Intelligent Systems</p>
-  </div>
+  </header>
 
-  <div class="wrap">
-    <div class="statusbar">
+  <main class="wrap">
+    <section class="statusbar" aria-label="System status">
       <div class="stat">
         <h3>System Status</h3>
         <p>ONLINE</p>
@@ -120,9 +132,9 @@
         <h3>Security</h3>
         <p>LOCKED</p>
       </div>
-    </div>
+    </section>
 
-    <div class="grid">
+    <section class="grid" aria-label="Command center tools">
       <div class="card">
         <h2>Active Agents</h2>
         <ul>
@@ -139,7 +151,7 @@
         <ul>
           <li>Daily SEC Form 4 Alerts</li>
           <li>Tom's Guide Intake</li>
-          <li>SageForge Monitoring</li>
+          <li>System Monitoring</li>
         </ul>
       </div>
 
@@ -154,9 +166,13 @@
         <a class="btn" href="#">PriceWatch</a>
         <a class="btn" href="#">MealScore</a>
         <a class="btn" href="#">Prompt Engine</a>
-        <a class="btn gray" href="#">System Monitor</a> None.
+        <a class="btn gray" href="#">System Monitor</a>
+      </div>
+    </section>
+
+    <nav class="footerlinks" aria-label="Footer">
       <a href="/">Back to ActionForge Labs</a>
-    </div>
-  </div>
+    </nav>
+  </main>
 </body>
 </html>
