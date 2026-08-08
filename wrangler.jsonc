@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "actionforgelabs-site",
+  "compatibility_date": "2026-08-08",
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}
