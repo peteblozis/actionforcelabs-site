@@ -23,6 +23,13 @@ jobs:
           -RulesPath ./tools/forge-factory/forge-factory-rules.json
           -ReportPath ./artifacts/forge-factory-governance-report.json
 
+      - name: Verify protected-path regression
+        shell: pwsh
+        run: >-
+          ./tools/forge-factory/test-path-regression.ps1
+          -RulesPath ./tools/forge-factory/forge-factory-rules.json
+          -ReportPath ./artifacts/forge-factory-governance-report.json
+
       - name: Upload governance report
         if: always()
         uses: actions/upload-artifact@v4
