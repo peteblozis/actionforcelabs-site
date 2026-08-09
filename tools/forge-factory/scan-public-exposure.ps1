@@ -100,13 +100,15 @@ foreach ($file in $filesToScan | Sort-Object FullName -Unique) {
     }
 }
 
+$scannedFiles = @($filesToScan | Sort-Object FullName -Unique | ForEach-Object { Get-RelativeRepositoryPath $_.FullName })
 $status = if ($violations.Count -gt 0) { "failed" } else { "passed" }
 $report = [PSCustomObject]@{
     ruleSet = $rules.name
     ruleVersion = $rules.version
     generatedAtUtc = [DateTime]::UtcNow.ToString("o")
     status = $status
-    scannedFileCount = ($filesToScan | Sort-Object FullName -Unique).Count
+    scannedFileCount = $scannedFiles.Count
+    scannedFiles = $scannedFiles
     violationCount = $violations.Count
     violations = $violations
 }
