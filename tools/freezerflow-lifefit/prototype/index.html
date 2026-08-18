@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FreezerFlow LifeFit Prototype</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; color: #132033; }
+    header { background: #0b1f33; color: white; padding: 28px 20px; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 22px 18px; }
+    h1 { margin: 0 0 8px; font-size: clamp(30px, 6vw, 48px); }
+    p { font-size: 17px; line-height: 1.5; }
+    .card { background: white; border-radius: 16px; padding: 20px; margin: 16px 0; box-shadow: 0 4px 14px rgba(7, 28, 51, .09); }
+    label { display: block; font-weight: bold; margin: 16px 0 6px; }
+    select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #b9c5d2; font-size: 16px; }
+    textarea { min-height: 92px; }
+    button, .btn { display: inline-block; background: #0b5cab; color: white; border: 0; border-radius: 10px; padding: 13px 18px; font-size: 16px; font-weight: bold; text-decoration: none; margin-top: 14px; cursor: pointer; }
+    .btn.secondary { background: #5f6b76; }
+    .result { border-left: 6px solid #0b5cab; background: #f0f7ff; padding: 16px; border-radius: 12px; margin-top: 14px; white-space: pre-wrap; }
+    .small { font-size: 14px; color: #536273; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>FreezerFlow LifeFit Prototype</h1>
+      <p>Demo-only meal decision flow. No data is stored. This page shows how the product will ask a few questions and return a practical meal card.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Build a demo meal</h2>
+      <label for="hunger">How hungry are you?</label>
+      <select id="hunger">
+        <option>Light</option>
+        <option selected>Normal</option>
+        <option>Very hungry</option>
+      </select>
+
+      <label for="taste">What taste lane sounds good?</label>
+      <select id="taste">
+        <option selected>Seafood</option>
+        <option>Chicken</option>
+        <option>Eggs / breakfast</option>
+        <option>Soup / comfort</option>
+        <option>Salad / no-cook</option>
+      </select>
+
+      <label for="effort">How much effort?</label>
+      <select id="effort">
+        <option>No work</option>
+        <option>Microwave</option>
+        <option selected>Air fryer</option>
+        <option>Normal prep</option>
+      </select>
+
+      <label for="usefirst">Use-first priority</label>
+      <select id="usefirst">
+        <option selected>Leftovers first</option>
+        <option>Freezer items first</option>
+        <option>Fresh produce first</option>
+        <option>Anything</option>
+      </select>
+
+      <label for="inventory">Demo inventory notes</label>
+      <textarea id="inventory">salmon, shrimp, broccoli, salad, eggs, yogurt, frozen vegetables, soup, restaurant leftovers</textarea>
+
+      <button onclick="buildMeal()">Build meal card</button>
+      <a class="btn secondary" href="/tools/freezerflow-lifefit/">Back</a>
+      <div id="output" class="result" aria-live="polite">Choose options, then press Build meal card.</div>
+      <p class="small">Prototype limitation: this demo uses local browser logic only. The production MVP will use a stored LifeFit profile, confirmed inventory, rule-backed prep cards, and feedback history.</p>
+    </section>
+  </main>
+
+  <script>
+    function buildMeal() {
+      const hunger = document.getElementById('hunger').value;
+      const taste = document.getElementById('taste').value;
+      const effort = document.getElementById('effort').value;
+      const usefirst = document.getElementById('usefirst').value;
+      const inv = document.getElementById('inventory').value.toLowerCase();
+
+      let meal = 'Protein + vegetable + simple side';
+      let score = '7.8';
+      let prep = 'Use the simplest safe method available. Reheat cooked leftovers to 165°F when reheating.';
+      let add = 'Add salad, tomatoes, cucumber, fruit, or yogurt if available.';
+      let avoid = 'Avoid bread, dessert, heavy sauces, and extra salt if those do not fit your goals.';
+
+      if (taste.includes('Seafood') && inv.includes('salmon')) {
+        meal = usefirst.includes('Leftovers') && inv.includes('leftover') ? 'Leftover salmon or trout + salad + broccoli' : 'Salmon + broccoli + salad';
+        score = '8.3';
+        prep = effort === 'Air fryer' ? 'Air fryer: 325°F for 4–6 minutes if already cooked, loosely covered; target 165°F when reheating.' : 'Microwave: short covered bursts, stir/rotate if possible, target 165°F when reheating.';
+      } else if (taste.includes('Seafood') && inv.includes('shrimp')) {
+        meal = 'Shrimp + freezer vegetables + salad';
+        score = '8.1';
+        prep = 'Use cooked shrimp cold or gently warm. Heat vegetables until hot; avoid heavy sauces.';
+      } else if (taste.includes('Chicken')) {
+        meal = 'Chicken + freezer vegetables + salad';
+        score = '7.8';
+        prep = 'Reheat cooked chicken to 165°F. Use microwave or air fryer based on effort.';
+      } else if (taste.includes('Eggs')) {
+        meal = 'Eggs + yogurt/cottage cheese + fruit + low-sodium vegetable drink if available';
+        score = '8.0';
+        prep = 'Use simple egg preparation or ready hard-boiled eggs. Keep it low cleanup.';
+      } else if (taste.includes('Soup')) {
+        meal = 'Soup + large salad + added protein if available';
+        score = '6.8';
+        prep = 'Follow package label. If using half portion, heat in a separate microwave-safe bowl in shorter bursts.';
+      } else if (taste.includes('Salad')) {
+        meal = 'Large salad + protein add-on';
+        score = '8.0';
+        prep = 'No-cook: add tuna, salmon, shrimp, egg, cottage cheese, or yogurt-based dressing if available.';
+      }
+
+      const portion = hunger === 'Very hungry' ? 'Use a full protein portion and double vegetables.' : hunger === 'Light' ? 'Use a half protein portion and full vegetables/salad.' : 'Use a normal protein portion and full vegetables/salad.';
+
+      document.getElementById('output').textContent =
+        'Decision: ' + meal + '\n' +
+        'Meal/Fit Score: ' + score + ' / 10\n\n' +
+        'Why: fits taste lane (' + taste + '), effort (' + effort + '), and use-first mode (' + usefirst + ').\n\n' +
+        'Portion: ' + portion + '\n\n' +
+        'Prep: ' + prep + '\n\n' +
+        'Add-ons: ' + add + '\n\n' +
+        'Avoid: ' + avoid + '\n\n' +
+        'Leftover plan: refrigerate cooked leftovers promptly and use soon; do not repeatedly reheat the same portion.';
+    }
+  </script>
+</body>
+</html>
