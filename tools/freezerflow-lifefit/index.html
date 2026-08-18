@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FreezerFlow LifeFit | ActionForge Labs</title>
+  <meta name="description" content="FreezerFlow LifeFit helps people use food they already have, waste less, decide faster, and eat better." />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; color: #132033; line-height: 1.5; }
+    header { background: linear-gradient(135deg, #0b1f33, #145c74); color: white; padding: 42px 24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+    h1 { font-size: clamp(34px, 6vw, 60px); margin: 0 0 12px; line-height: 1.05; }
+    h2 { font-size: 28px; margin: 0 0 12px; }
+    h3 { margin: 0 0 8px; font-size: 20px; }
+    p { font-size: 18px; margin: 0 0 14px; }
+    .hero p { max-width: 780px; color: #d7e7f3; }
+    .pill { display: inline-block; background: #dff7e7; color: #104f2e; padding: 8px 12px; border-radius: 999px; font-weight: bold; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .card { background: white; border-radius: 16px; padding: 22px; box-shadow: 0 4px 14px rgba(7, 28, 51, .09); }
+    .card strong { color: #0b5cab; }
+    .steps { counter-reset: step; display: grid; gap: 12px; }
+    .step { background: white; border-left: 6px solid #0b5cab; padding: 16px 18px; border-radius: 12px; box-shadow: 0 3px 10px rgba(7, 28, 51, .07); }
+    .commands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .cmd { background: #0b1f33; color: white; padding: 14px; border-radius: 12px; font-weight: bold; min-height: 86px; }
+    .cmd span { display: block; margin-top: 6px; font-weight: normal; color: #cbd9e6; font-size: 14px; }
+    .cta { background: #e9f4ff; border: 1px solid #b8d8f6; padding: 24px; border-radius: 16px; }
+    .btn { display: inline-block; background: #0b5cab; color: white; text-decoration: none; border-radius: 10px; padding: 13px 18px; font-weight: bold; margin: 8px 8px 0 0; }
+    .btn.secondary { background: #5f6b76; }
+    .small { font-size: 14px; color: #526173; }
+    footer { padding: 28px 20px; text-align: center; color: #536273; }
+    @media (max-width: 860px) { .grid, .commands { grid-template-columns: 1fr; } header { padding: 32px 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div class="pill">Production-path launch shell</div>
+      <h1>FreezerFlow LifeFit</h1>
+      <p>Use what you have. Waste less. Decide faster. Eat better.</p>
+      <p>A freezer-first meal planning assistant that adapts to your appliances, energy level, schedule, leftovers, preferences, and nutrition goals.</p>
+      <a class="btn" href="#commands">See command modes</a>
+      <a class="btn secondary" href="/">Back to ActionForge Labs</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="grid" aria-label="Product benefits">
+      <div class="card">
+        <h3>Inventory-first</h3>
+        <p>Starts with food already in the freezer, fridge, pantry, and leftovers instead of forcing ideal recipes.</p>
+      </div>
+      <div class="card">
+        <h3>LifeFit profile</h3>
+        <p>Adapts to real life: appliances, effort level, cleanup tolerance, schedule, household mode, and food preferences.</p>
+      </div>
+      <div class="card">
+        <h3>Practical prep cards</h3>
+        <p>Turns a meal decision into clear preparation steps with method, time, temperature, and safety cues.</p>
+      </div>
+    </section>
+
+    <section style="margin-top: 32px;" aria-label="How it works">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step"><strong>1. Capture what is available.</strong> Add items by photo, receipt, text, or manual entry. The system separates confirmed items from uncertain guesses.</div>
+        <div class="step"><strong>2. Build the LifeFit profile.</strong> The system learns what appliances are allowed, how much effort is realistic, and what goals should guide meals.</div>
+        <div class="step"><strong>3. Rank what should be used first.</strong> Leftovers, fresh produce, opened packages, near-date items, and freezer backlog move up the list.</div>
+        <div class="step"><strong>4. Create a meal card.</strong> Each meal includes a score, portion, prep instructions, add-ons, avoid list, and leftover plan.</div>
+      </div>
+    </section>
+
+    <section id="commands" style="margin-top: 32px;" aria-label="Command modes">
+      <h2>Prototype command modes</h2>
+      <div class="commands">
+        <div class="cmd">#MEAL<span>Build one meal now.</span></div>
+        <div class="cmd">#MEALPLAN<span>Build a short plan.</span></div>
+        <div class="cmd">#INVENTORY<span>Update food inventory.</span></div>
+        <div class="cmd">#USEFIRST<span>Show what should be used soon.</span></div>
+        <div class="cmd">#REST<span>Low-energy meal mode.</span></div>
+        <div class="cmd">#RESTAURANT<span>Choose from a menu.</span></div>
+        <div class="cmd">#LEFTOVER<span>Convert leftovers safely.</span></div>
+        <div class="cmd">#SHOP<span>Decide buy, maybe, or delete.</span></div>
+      </div>
+    </section>
+
+    <section style="margin-top: 32px;" class="cta">
+      <h2>Current status</h2>
+      <p>FreezerFlow LifeFit is in production-path prototype development. The public launch shell is live so testers and reviewers can understand the product direction while the MVP app, scoring model, safety rules, and inventory workflow are built.</p>
+      <p class="small">FreezerFlow LifeFit is a meal planning and food organization assistant. It does not provide medical diagnosis or treatment. Nutrition scores are coaching tools based on user-selected goals and preferences.</p>
+    </section>
+  </main>
+
+  <footer>
+    ActionForge Labs · FreezerFlow LifeFit
+  </footer>
+</body>
+</html>
