@@ -10,6 +10,11 @@
   "vars": {
     "SFC_MODEL": "gpt-realtime"
   },
+  "kv_namespaces": [
+    {
+      "binding": "SFC_CREDENTIALS"
+    }
+  ],
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
