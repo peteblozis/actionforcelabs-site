@@ -1,13 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "actionforgelabs-site",
-  "compatibility_date": "2026-08-08",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-18",
   "preview_urls": true,
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "SFC_MODEL": "gpt-realtime"
+  },
   "assets": {
     "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/sfc/*"],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   }
