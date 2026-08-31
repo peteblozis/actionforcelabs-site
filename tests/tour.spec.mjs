@@ -47,9 +47,28 @@ async function routeWikipedia(page, capture = {}) {
   });
 }
 
-async function configureLocation(context) {
+async function configureLocation(page, context) {
   await context.grantPermissions(['geolocation'], { origin: 'http://127.0.0.1:4173' });
   await context.setGeolocation(preciseLocation);
+  // Playwright WebKit reports synthetic geolocation with accuracy=9999, which
+  // exercises TOUR's intentional low-confidence suppression instead of the
+  // privacy invariant under test. Pin only accuracy while preserving the exact
+  // coordinates so Chromium and WebKit execute the same outbound-coarsening path.
+  await page.addInitScript(({ latitude, longitude }) => {
+    const position = {
+      coords: {
+        latitude, longitude, accuracy: 10,
+        altitude: null, altitudeAccuracy: null, heading: null, speed: null
+      },
+      timestamp: Date.now()
+    };
+    const geo = {
+      getCurrentPosition(success){ queueMicrotask(() => success(position)); },
+      watchPosition(success){ queueMicrotask(() => success(position)); return 1; },
+      clearWatch(){}
+    };
+    Object.defineProperty(navigator, 'geolocation', { configurable: true, value: geo });
+  }, preciseLocation);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -102,7 +121,7 @@ test('FF-ESC-002 / no-match is explicit and does not claim nearby content answer
 
 test('FF-ESC-006 / outbound nearby lookup uses coarse location, never precise GPS', async ({ page, context }) => {
   const capture = {};
-  await configureLocation(context);
+  await configureLocation(page, context);
   await routeWikipedia(page, capture);
   await page.goto(tourPath);
   await page.getByRole('button', { name: 'START TOUR & ALLOW LOCATION' }).click();
@@ -132,7 +151,7 @@ test('FF-ESC-004 / narration pause, resume and repeat are functional state trans
 });
 
 test('FF-ESC-006 / Flight Recorder never persists precise coordinate keys', async ({ page, context }) => {
-  await configureLocation(context);
+  await configureLocation(page, context);
   await routeWikipedia(page);
   await page.goto(tourPath);
   await page.getByRole('button', { name: 'START TOUR & ALLOW LOCATION' }).click();
