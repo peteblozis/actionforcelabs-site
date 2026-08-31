@@ -55,16 +55,22 @@ async function configureLocation(page, context) {
   // privacy invariant under test. Pin only accuracy while preserving the exact
   // coordinates so Chromium and WebKit execute the same outbound-coarsening path.
   await page.addInitScript(({ latitude, longitude }) => {
-    const position = {
+    const makePosition = () => ({
       coords: {
         latitude, longitude, accuracy: 10,
         altitude: null, altitudeAccuracy: null, heading: null, speed: null
       },
       timestamp: Date.now()
-    };
+    });
     const geo = {
-      getCurrentPosition(success){ queueMicrotask(() => success(position)); },
-      watchPosition(success){ queueMicrotask(() => success(position)); return 1; },
+      getCurrentPosition(success){ setTimeout(() => success(makePosition()), 0); },
+      watchPosition(success){
+        // WebKit can miss a queueMicrotask callback installed from addInitScript
+        // during the user-click path. Use a timer so both browser engines receive
+        // the synthetic fix after START TOUR returns to the event loop.
+        setTimeout(() => success(makePosition()), 0);
+        return 1;
+      },
       clearWatch(){}
     };
     Object.defineProperty(navigator, 'geolocation', { configurable: true, value: geo });
