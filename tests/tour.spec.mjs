@@ -50,10 +50,6 @@ async function routeWikipedia(page, capture = {}) {
 async function configureLocation(page, context) {
   await context.grantPermissions(['geolocation'], { origin: 'http://127.0.0.1:4173' });
   await context.setGeolocation(preciseLocation);
-  // Playwright WebKit reports synthetic geolocation with accuracy=9999, which
-  // exercises TOUR's intentional low-confidence suppression instead of the
-  // privacy invariant under test. Pin only accuracy while preserving the exact
-  // coordinates so Chromium and WebKit execute the same outbound-coarsening path.
   await page.addInitScript(({ latitude, longitude }) => {
     const makePosition = () => ({
       coords: {
@@ -64,16 +60,15 @@ async function configureLocation(page, context) {
     });
     const geo = {
       getCurrentPosition(success){ setTimeout(() => success(makePosition()), 0); },
-      watchPosition(success){
-        // WebKit can miss a queueMicrotask callback installed from addInitScript
-        // during the user-click path. Use a timer so both browser engines receive
-        // the synthetic fix after START TOUR returns to the event loop.
-        setTimeout(() => success(makePosition()), 0);
-        return 1;
-      },
+      watchPosition(success){ setTimeout(() => success(makePosition()), 0); return 1; },
       clearWatch(){}
     };
-    Object.defineProperty(navigator, 'geolocation', { configurable: true, value: geo });
+    // Some WebKit builds expose Navigator.geolocation as a prototype accessor
+    // that shadows an own-property override. Replace the prototype accessor for
+    // the synthetic journey so both engines exercise the same privacy path.
+    const proto = Object.getPrototypeOf(navigator);
+    try { Object.defineProperty(proto, 'geolocation', { configurable: true, get: () => geo }); } catch {}
+    try { Object.defineProperty(navigator, 'geolocation', { configurable: true, get: () => geo }); } catch {}
   }, preciseLocation);
 }
 
@@ -131,6 +126,7 @@ test('FF-ESC-006 / outbound nearby lookup uses coarse location, never precise GP
   await routeWikipedia(page, capture);
   await page.goto(tourPath);
   await page.getByRole('button', { name: 'START TOUR & ALLOW LOCATION' }).click();
+  await expect(page.locator('#gps')).toContainText(/GPS (HIGH|MEDIUM)/, { timeout: 10000 });
   await expect.poll(() => capture.nearbyUrl || '', { timeout: 10000 }).not.toBe('');
   const url = new URL(capture.nearbyUrl);
   const coord = url.searchParams.get('ggscoord');
