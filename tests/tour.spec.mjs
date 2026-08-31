@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const tourPath = '/tester/tour/';
-const wikiApi = /https:\/\/en\.wikipedia\.org\/w\/api\.php.*/;
+const wikiApi = '**/w/api.php*';
 const preciseLocation = { latitude: 29.7382, longitude: -98.1047 };
 
 const goodPlace = {
