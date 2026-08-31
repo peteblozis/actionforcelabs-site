@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 const tourPath = '/tester/tour/';
+const wikiApi = /https:\/\/en\.wikipedia\.org\/w\/api\.php.*/;
+const preciseLocation = { latitude: 29.7382, longitude: -98.1047 };
+
 const goodPlace = {
   query: { pages: {
     '1': { pageid: 1, title: 'Gruene Hall', extract: 'Gruene Hall is a historic dance hall in the Gruene Historic District of New Braunfels, Texas. It opened in the nineteenth century and remains known for live music and Texas culture.' }
@@ -14,22 +17,24 @@ const nearby = {
 
 async function mockSpeech(page) {
   await page.addInitScript(() => {
-    class Utterance { constructor(text){ this.text=text; this.rate=1; this.onstart=null; this.onend=null; } }
-    window.SpeechSynthesisUtterance = Utterance;
-    let speaking=false, paused=false, last=null;
-    window.speechSynthesis = {
-      get speaking(){return speaking;}, get paused(){return paused;},
-      cancel(){speaking=false;paused=false;},
-      speak(u){last=u;speaking=true;paused=false;u.onstart?.();},
-      pause(){if(speaking){paused=true;}},
-      resume(){if(paused){paused=false;speaking=true;}},
-      __last(){return last?.text||'';}
+    class TestUtterance { constructor(text){ this.text=text; this.rate=1; this.onstart=null; this.onend=null; } }
+    let speaking=false, paused=false, last='';
+    const synth = {
+      get speaking(){ return speaking; },
+      get paused(){ return paused; },
+      cancel(){ speaking=false; paused=false; },
+      speak(u){ last=u?.text||''; speaking=true; paused=false; u?.onstart?.(); },
+      pause(){ if(speaking){ paused=true; } },
+      resume(){ if(paused){ paused=false; speaking=true; } },
+      __last(){ return last; }
     };
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable:true, value: TestUtterance });
+    Object.defineProperty(window, 'speechSynthesis', { configurable:true, value: synth });
   });
 }
 
 async function routeWikipedia(page, capture = {}) {
-  await page.route('https://en.wikipedia.org/w/api.php**', async route => {
+  await page.route(wikiApi, async route => {
     const url = new URL(route.request().url());
     const generator = url.searchParams.get('generator');
     if (generator === 'geosearch') {
@@ -40,6 +45,11 @@ async function routeWikipedia(page, capture = {}) {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(goodPlace) });
     }
   });
+}
+
+async function configureLocation(context) {
+  await context.grantPermissions(['geolocation'], { origin: 'http://127.0.0.1:4173' });
+  await context.setGeolocation(preciseLocation);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -77,7 +87,7 @@ test('FF-ESC-002 / known named place returns the named place, not nearby substit
 });
 
 test('FF-ESC-002 / no-match is explicit and does not claim nearby content answers the request', async ({ page }) => {
-  await page.route('https://en.wikipedia.org/w/api.php**', async route => {
+  await page.route(wikiApi, async route => {
     const url = new URL(route.request().url());
     const body = url.searchParams.get('generator') === 'geosearch' ? nearby : { query: { pages: {} } };
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -90,12 +100,13 @@ test('FF-ESC-002 / no-match is explicit and does not claim nearby content answer
   expect(spoken).not.toContain('Gruene Historic District');
 });
 
-test('FF-ESC-006 / outbound nearby lookup uses coarse location, never precise GPS', async ({ page }) => {
+test('FF-ESC-006 / outbound nearby lookup uses coarse location, never precise GPS', async ({ page, context }) => {
   const capture = {};
+  await configureLocation(context);
   await routeWikipedia(page, capture);
   await page.goto(tourPath);
   await page.getByRole('button', { name: 'START TOUR & ALLOW LOCATION' }).click();
-  await expect.poll(() => capture.nearbyUrl || '').not.toBe('');
+  await expect.poll(() => capture.nearbyUrl || '', { timeout: 10000 }).not.toBe('');
   const url = new URL(capture.nearbyUrl);
   const coord = url.searchParams.get('ggscoord');
   expect(coord).toBe('29.74|-98.1');
@@ -108,6 +119,7 @@ test('FF-ESC-004 / narration pause, resume and repeat are functional state trans
   await page.goto(tourPath);
   await page.locator('#placeInput').fill('Gruene Hall');
   await page.getByRole('button', { name: 'TELL ME ABOUT THIS PLACE' }).click();
+  await expect(page.locator('#placeStatus')).toContainText('Found: Gruene Hall');
   await expect(page.locator('#narrationStatus')).toContainText('Speaking');
   await page.getByRole('button', { name: 'PAUSE' }).click();
   await expect(page.locator('#narrationStatus')).toContainText('Paused');
@@ -119,11 +131,12 @@ test('FF-ESC-004 / narration pause, resume and repeat are functional state trans
   expect(after).toBe(before);
 });
 
-test('FF-ESC-006 / Flight Recorder never persists precise coordinate keys', async ({ page }) => {
+test('FF-ESC-006 / Flight Recorder never persists precise coordinate keys', async ({ page, context }) => {
+  await configureLocation(context);
   await routeWikipedia(page);
   await page.goto(tourPath);
   await page.getByRole('button', { name: 'START TOUR & ALLOW LOCATION' }).click();
-  await expect(page.locator('#gps')).toContainText('GPS');
+  await expect(page.locator('#gps')).toContainText(/GPS (HIGH|MEDIUM|LOW)/, { timeout: 10000 });
   const raw = await page.evaluate(() => localStorage.getItem('tour.flight.v4') || '[]');
   expect(raw).not.toMatch(/"latitude"|"longitude"|"lat"|"lng"|"coords"/i);
   expect(raw).not.toContain('29.7382');
