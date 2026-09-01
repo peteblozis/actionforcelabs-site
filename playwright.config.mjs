@@ -10,6 +10,11 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // The TOUR journeys mock Wikipedia with page.route(). A previously registered
+    // service worker can satisfy requests before Playwright routing sees them,
+    // especially in WebKit, which makes the privacy assertion non-deterministic.
+    // The service-worker asset itself is verified independently by FF-ESC-008.
+    serviceWorkers: 'block',
     geolocation: { latitude: 29.7382, longitude: -98.1047 },
     permissions: ['geolocation']
   },
