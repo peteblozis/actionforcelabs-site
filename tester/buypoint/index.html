@@ -70,7 +70,31 @@ let product={id:'bartenura-moscato-dasti-750',name:"Bartenura Moscato d'Asti DOC
   {store:'Total Wine',price:15.99,sizeMl:750,shipping:'Location sensitive',coupon:'Mix 6: $14.39 each',stock:'Availability not proven',url:'https://www.totalwine.com/wine/champagne-sparkling-wine/muscatmoscato/dasti/bartenura-moscato/p/10612750'},
   {store:'Twin Liquors',price:16.99,sizeMl:750,shipping:'Pickup; shipping not verified',coupon:'None verified',stock:'Visible listing',url:'https://twinliquors.com/shop/product/bartenura-moscato-dasti/5521cefb6561310003bf0300'}]};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let method='text';
-function money(n){return '
+function money(n){return '$'+Number(n).toFixed(2)}
+function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function fileData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('photo_read_failed'));reader.readAsDataURL(file)})}
+function hideResults(){['result','offersCard','contextCard'].forEach(id=>$('#'+id).classList.add('hidden'))}
+function fromProvider(payload){
+  const found=payload.result, p=found.product||{}, quantity=[p.quantity_value,p.quantity_unit].filter(x=>x!==null&&x!=='').join(' ');
+  return {
+    id:p.gtin||[p.brand,p.name,p.variant,quantity].filter(Boolean).join('-').toLowerCase().replace(/[^a-z0-9]+/g,'-'),
+    name:p.name||'Matched product',
+    variant:[p.brand,p.variant,quantity].filter(Boolean).join(' · '),
+    quantityMl:p.quantity_unit==='mL'?Number(p.quantity_value)||null:null,
+    recommended:Number(found.recommended_buy_price),
+    guidance:found.guidance,
+    reason:found.reason,
+    live:true,
+    offers:(found.offers||[]).map(o=>({store:o.retailer,price:Number(o.price),sizeMl:p.quantity_unit==='mL'?Number(p.quantity_value)||null:null,shipping:o.shipping,coupon:o.coupon,stock:o.availability,url:o.source_url}))
+  };
+}
+async function providerMatch(input){
+  const response=await fetch(PROVIDER_URL+'/api/buypoint/resolve',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({input})});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(payload.error||'provider_unavailable');
+  if(payload.result?.status!=='matched')return null;
+  return fromProvider(payload);
+}
 function safeLoad(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
 function selectMethod(next){method=next;$$('.method').forEach(b=>b.classList.toggle('active',b.dataset.method===next));$$('.inputPanel').forEach(p=>p.classList.add('hidden'));$('#'+next+'Panel').classList.remove('hidden');$('#entryStatus').textContent=next==='photo'?'Choose a photo; unknown visual matches fail closed.':'Ready to match the exact product and quantity.'}
 $$('.method').forEach(b=>b.onclick=()=>selectMethod(b.dataset.method));
