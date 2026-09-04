@@ -1,0 +1,27 @@
+name: BuyPoint Unified Concept Gate
+
+on:
+  pull_request:
+    paths:
+      - 'tester/buypoint/**'
+      - 'tests/buypoint.spec.mjs'
+      - 'package.json'
+      - 'playwright.config.mjs'
+      - '.github/workflows/buypoint-concept-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-mobile-and-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test tests/buypoint.spec.mjs --project=chromium
