@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "buypoint-provider-preview",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-04",
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "BUYPOINT_MODEL": "gpt-6-astra",
+    "BUYPOINT_ALLOWED_ORIGIN": "https://REPLACE_WITH_EXACT_PRIVATE_BUYPOINT_PREVIEW"
+  }
+}
