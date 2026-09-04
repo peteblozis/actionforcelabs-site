@@ -5,7 +5,7 @@ const path = '/tester/buypoint/';
 test('unified first-time journey exposes every supported input without old Fairsight fields', async ({ page }) => {
   await page.goto(path);
   await expect(page).toHaveTitle('BuyPoint Unified Concept Test');
-  await expect(page.locator('[data-buy-point-release="BUYPOINT-UNIFIED-RC1"]')).toBeVisible();
+  await expect(page.locator('[data-buy-point-release="BUYPOINT-UNIFIED-RC2"]')).toBeVisible();
   for (const name of ['Type','Photo','Barcode','Voice','URL']) await expect(page.getByRole('button',{name:new RegExp(name,'i')})).toBeVisible();
   await expect(page.getByText(/price you see/i)).toHaveCount(0);
   await expect(page.getByText(/store or website/i)).toHaveCount(0);
