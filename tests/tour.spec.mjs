@@ -120,6 +120,21 @@ test('FF-ESC-002 / known named place returns the named place, not nearby substit
   expect(spoken).toContain('Gruene Hall');
 });
 
+test('FF-ESC-010 / exact venue beats a broader area sharing most terms', async ({ page }) => {
+  await page.route(wikiApi, async route => {
+    const body = { query: { pages: {
+      '1': { pageid: 1, title: 'Gruene, New Braunfels, Texas', extract: 'Gruene is a historic district in New Braunfels, Texas with music and commercial destinations.' },
+      '2': { pageid: 2, title: 'Gruene Hall', extract: 'Gruene Hall is a historic dance hall and live music venue in New Braunfels, Texas.' }
+    }}};
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+  });
+  await page.goto(tourPath);
+  await page.locator('#placeInput').fill('Gruene Hall, New Braunfels');
+  await page.getByRole('button', { name: 'TELL ME ABOUT THIS PLACE' }).click();
+  await expect(page.locator('#placeStatus')).toContainText('Found: Gruene Hall');
+  await expect(page.locator('#placeStatus')).not.toContainText('Found: Gruene, New Braunfels');
+});
+
 test('FF-ESC-002 / no-match is explicit and does not claim nearby content answers the request', async ({ page }) => {
   await page.route(wikiApi, async route => {
     const url = new URL(route.request().url());
