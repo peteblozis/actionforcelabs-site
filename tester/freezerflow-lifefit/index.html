@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>FreezerFlow LifeFit — MVP Spine Tester</title>
+<style>
+:root{--bg:#0d0f14;--surface:#151923;--surface2:#1d2230;--line:#2d3447;--text:#f4f6fb;--muted:#a7afc0;--blue:#65a9ff;--green:#48d597;--amber:#ffc45d;--red:#ff7f7f;--radius:16px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 Arial,sans-serif}button,input,select{font:inherit}
+.banner{position:sticky;top:0;z-index:50;background:#2a220d;border-bottom:2px solid var(--amber);padding:10px 16px;color:var(--amber);font-weight:700}
+.wrap{max-width:980px;margin:auto;padding:22px 16px 70px}h1{font-size:clamp(2rem,7vw,3.4rem);line-height:1.05;margin:.2em 0}.sub{color:var(--muted);max-width:780px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:12px 16px;border-radius:999px;cursor:pointer}.tabs button.active{background:var(--blue);color:#07111e;border-color:var(--blue);font-weight:700}
+.panel{display:none}.panel.active{display:block}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #566078;background:#0f131c;color:var(--text)}
+.checks{display:flex;flex-wrap:wrap;gap:9px}.check{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}.check input{width:auto}
+.btn{border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:#08111c;font-weight:700;cursor:pointer}.btn.secondary{background:#30384b;color:var(--text)}.btn.danger{background:#4b2930;color:#ffd9dd}.btn:focus{outline:3px solid white;outline-offset:2px}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#283044;color:#dce5f5;font-size:.82rem}.pill.use{background:#5a4316;color:#ffe2a1}.pill.open{background:#153f31;color:#baf4d8}.score{font-size:2.2rem;font-weight:800;color:var(--green)}
+.item{display:grid;grid-template-columns:1fr auto;gap:12px;border-top:1px solid var(--line);padding:14px 0}.item:first-child{border-top:0}.muted{color:var(--muted)}.small{font-size:.88rem;color:var(--muted)}
+.hero{border:1px solid #31587f;background:linear-gradient(135deg,#102238,#132b35)}.hero h2{margin-top:0}.reason{background:#0e1825;border-left:5px solid var(--green);padding:14px;border-radius:10px;margin:12px 0}
+.steps{counter-reset:s}.step{counter-increment:s;background:var(--surface2);padding:13px 14px;border-radius:10px;margin:9px 0}.step:before{content:counter(s) ". ";font-weight:800;color:var(--blue)}
+.template{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface2)}.template h3{margin:0 0 6px}
+.notice{border-left:5px solid var(--amber);background:#241f12;padding:13px;border-radius:9px}.good{color:var(--green)}.warn{color:var(--amber)}
+.spacious body{}body.spacious{font-size:19px}body.spacious .card{padding:26px}body.spacious button,body.spacious input,body.spacious select{min-height:52px}
+@media(max-width:720px){.grid,.grid3{grid-template-columns:1fr}.item{grid-template-columns:1fr}.tabs button{flex:1 1 45%}}
+</style>
+</head>
+<body>
+<div class="banner">🧪 TESTER BUILD · LOCAL DEMO DATA ONLY · NOT PUBLIC RELEASE</div>
+<main class="wrap">
+  <h1>FreezerFlow LifeFit</h1>
+  <p class="sub"><strong>Personal Kitchen Decision System.</strong> This tester slice proves the product spine: LifeFit hard filters → inventory truth → use-first rotation → one Best Next Meal → Cook Mode → feedback.</p>
+  <div class="row">
+    <button class="btn secondary" id="spaceBtn" onclick="toggleSpace()">Large / spacious view</button>
+    <button class="btn secondary" onclick="loadDemo()">Load neutral demo</button>
+    <button class="btn danger" onclick="resetAll()">Reset local demo</button>
+  </div>
+
+  <nav class="tabs" aria-label="FreezerFlow tester sections">
+    <button class="active" data-tab="profile">1 · LifeFit</button>
+    <button data-tab="inventory">2 · Inventory</button>
+    <button data-tab="decision">3 · Best Meal</button>
+    <button data-tab="quick">4 · Quick Meals</button>
+  </nav>
+
+  <section id="profile" class="panel active">
+    <div class="card">
+      <h2>LifeFit Cooking Profile</h2>
+      <p class="muted">These are hard execution constraints. A meal that violates them is rejected before ranking.</p>
+      <label>Cooking methods the planner may use</label>
+      <div class="checks" id="applianceChecks">
+        <label class="check"><input type="checkbox" value="no-cook"> No-cook</label>
+        <label class="check"><input type="checkbox" value="microwave" checked> Microwave</label>
+        <label class="check"><input type="checkbox" value="air-fryer" checked> Air fryer</label>
+        <label class="check"><input type="checkbox" value="oven"> Oven</label>
+        <label class="check"><input type="checkbox" value="stovetop"> Stovetop</label>
+        <label class="check"><input type="checkbox" value="slow-cooker"> Slow cooker</label>
+      </div>
+      <div class="grid">
+        <div><label for="skill">Kitchen confidence</label><select id="skill"><option value="1">Not a cook</option><option value="2" selected>Simple instructions</option><option value="3">Comfortable cook</option></select></div>
+        <div><label for="effort">Effort limit</label><select id="effort"><option value="1">Heat & eat</option><option value="2" selected>Very simple</option><option value="3">Moderate</option></select></div>
+        <div><label for="cleanup">Cleanup limit</label><select id="cleanup"><option value="1">One bowl / basket</option><option value="2" selected>Light cleanup</option><option value="3">Normal cleanup</option></select></div>
+        <div><label for="household">Household mode</label><select id="household"><option value="1" selected>One person</option><option value="2">Two people</option><option value="4">Family</option></select></div>
+        <div><label for="lifeMode">Life mode</label><select id="lifeMode"><option>Solo routine</option><option>Senior simple-living</option><option>Rebuilding routine</option><option>Couple / household</option><option>Family routine</option></select></div>
+        <div><label for="goal">Meal emphasis</label><select id="goal"><option value="balanced">Balanced</option><option value="protein">Higher protein</option><option value="produce">More vegetables / produce</option><option value="lower-sodium">Lower sodium</option></select></div>
+      </div>
+      <button class="btn" onclick="saveProfile()">Save LifeFit profile</button>
+      <span id="profileSaved" class="small"></span>
+    </div>
+  </section>
+
+  <section id="inventory" class="panel">
+    <div class="card">
+      <h2>Add inventory item</h2>
+      <div class="grid">
+        <div><label for="itemName">Item name</label><input id="itemName" placeholder="e.g., salmon fillet"></div>
+        <div><label for="itemRole">Meal role</label><select id="itemRole"><option value="protein">Protein</option><option value="side">Side / vegetable</option><option value="complete">Complete meal</option><option value="breakfast">Breakfast / quick meal</option><option value="other">Other</option></select></div>
+        <div><label for="itemLoc">Location</label><select id="itemLoc"><option>Freezer</option><option>Fridge</option><option>Pantry</option></select></div>
+        <div><label for="servings">Servings / pieces left</label><input id="servings" type="number" min=".25" step=".25" value="1"></div>
+        <div><label for="itemMethod">Best simple method</label><select id="itemMethod"><option value="no-cook">No-cook</option><option value="microwave">Microwave</option><option value="air-fryer">Air fryer</option><option value="oven">Oven</option><option value="stovetop">Stovetop</option></select></div>
+        <div><label for="age">How long has it been here?</label><select id="age"><option value="0">New / recent</option><option value="1">Had a while</option><option value="2">Use soon</option></select></div>
+      </div>
+      <div class="checks" style="margin-top:12px">
+        <label class="check"><input id="opened" type="checkbox"> Opened / partial</label>
+        <label class="check"><input id="leftover" type="checkbox"> Leftover / already cooked</label>
+      </div>
+      <button class="btn" onclick="addItem()">Add item</button>
+    </div>
+    <div class="card">
+      <h2>Kitchen Reality Model</h2>
+      <p class="small">Counts and servings are first-class. “Use soon” is a confirmed user state in this MVP; future versions may infer dates but must show confidence and allow one-tap correction.</p>
+      <div id="inventoryList"></div>
+    </div>
+  </section>
+
+  <section id="decision" class="panel">
+    <div class="card hero">
+      <h2>Best Next Meal</h2>
+      <div id="decisionCard"><p class="muted">Add inventory and save a LifeFit profile, then generate a decision.</p></div>
+      <button class="btn" onclick="recommend()">Tell me what to eat next</button>
+    </div>
+    <div class="card">
+      <h2>Use First</h2>
+      <div id="useFirst"></div>
+    </div>
+  </section>
+
+  <section id="quick" class="panel">
+    <div class="card">
+      <h2>Quick Meal Library</h2>
+      <p class="muted">Reusable meal templates belong to the individual profile. Brand-specific or personal favorites can be added by the user; the commercial engine stays configurable.</p>
+      <div class="grid3">
+        <div class="template"><h3>Protein yogurt bowl</h3><p>No-cook · 3–5 min</p><p class="small">Yogurt + chia + fruit. Optional protein drink for more staying power.</p></div>
+        <div class="template"><h3>Microwave egg bites</h3><p>Microwave · ~1–2 min</p><p class="small">Use package directions, check the center, then rest briefly. Pair with produce or another protein as the profile calls for.</p></div>
+        <div class="template"><h3>Protein oatmeal</h3><p>Microwave · ~2 min</p><p class="small">Warm controlled-carb option; pair with a protein source rather than eating it alone.</p></div>
+        <div class="template"><h3>Frozen egg frittatas</h3><p>Air fryer / microwave</p><p class="small">Fast freezer backup. Exact time and temperature come from the saved product/prep card.</p></div>
+        <div class="template"><h3>Hard-boiled egg tray</h3><p>No-cook</p><p class="small">Emergency meal lane for running late or low-effort days.</p></div>
+        <div class="template"><h3>Use-first seafood + vegetables</h3><p>Air fryer + microwave</p><p class="small">Simple protein + vegetable construction that can consume two priority inventory items.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+const KEY='freezerflow_lifefit_mvp_v1';
+const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[]}');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
+function methods(){return [...document.querySelectorAll('#applianceChecks input:checked')].map(x=>x.value)}
+function saveProfile(){
+  state.profile={methods:methods(),skill:+skill.value,effort:+effort.value,cleanup:+cleanup.value,household:+household.value,lifeMode:lifeMode.value,goal:goal.value};
+  persist(); profileSaved.textContent=' Saved locally in this browser.'; render();
+}
+function addItem(){
+  const name=itemName.value.trim(); if(!name){alert('Enter an item name.');return}
+  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:+servings.value||1,method:itemMethod.value,age:+age.value,opened:opened.checked,leftover:leftover.checked,preference:70,health:70});
+  itemName.value='';opened.checked=false;leftover.checked=false;age.value='0';servings.value='1';persist();render();
+}
+function removeItem(id){state.items=state.items.filter(x=>x.id!==id);persist();render()}
+function executionFit(i){return state.profile&&state.profile.methods.includes(i.method)?100:0}
+function priority(i){
+  const waste=i.age===2?100:i.age===1?70:35;
+  const exec=executionFit(i);
+  const complete=i.role==='complete'?100:(i.role==='protein'||i.role==='side'?75:55);
+  const openedUrg=i.leftover?100:i.opened?90:35;
+  return Math.round(.30*waste+.20*exec+.15*complete+.15*openedUrg+.10*i.preference+.10*i.health);
+}
+function render(){
+  inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''}<div class="small">${i.servings} serving/piece(s) · ${esc(i.role)} · ${esc(i.method)} · Use Priority ${priority(i)}/100</div></div><button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div>`).join(''):'<p class="muted">No inventory yet.</p>';
+  const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
+  useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
+}
+function rejectReason(i){
+  if(!state.profile)return 'LifeFit profile not saved';
+  if(!state.profile.methods.includes(i.method))return 'requires '+i.method+', which is not allowed';
+  return '';
+}
+function safety(i){
+  if(i.leftover)return 'Reheat the portion you will eat to 165°F.';
+  if(/fish|salmon|trout|cod|tilapia/i.test(i.name))return 'If raw fish, cook to at least 145°F in the thickest part.';
+  if(/stuffed/i.test(i.name))return 'For a stuffed item, verify 165°F in the center/stuffing.';
+  return 'Follow the package or validated prep card and verify doneness before serving.';
+}
+function prep(i){
+  if(i.method==='no-cook')return 'No cooking. Portion the amount you plan to eat and keep the remainder refrigerated as appropriate.';
+  if(i.method==='microwave')return 'Microwave using the package/saved prep-card time. Check the center before serving.';
+  if(i.method==='air-fryer')return 'Air fry using the package/saved prep-card temperature and time; check early to avoid overcooking.';
+  return 'Use the saved prep card for this method.';
+}
+function recommend(){
+  if(!state.profile){decisionCard.innerHTML='<p class="warn"><strong>Blocked:</strong> Save the LifeFit profile first.</p>';return}
+  const eligible=state.items.filter(i=>!rejectReason(i)).sort((a,b)=>priority(b)-priority(a));
+  if(!eligible.length){decisionCard.innerHTML='<p class="warn"><strong>No eligible meal.</strong> Inventory exists, but none matches the allowed cooking methods. Add an eligible item or explicitly change LifeFit.</p>';return}
+  let main=eligible.find(i=>i.role==='complete')||eligible.find(i=>i.role==='protein'||i.role==='breakfast')||eligible[0];
+  let side=eligible.find(i=>i.id!==main.id&&i.role==='side');
+  const used=[main,...(side?[side]:[])];
+  const avg=Math.round(used.reduce((s,i)=>s+priority(i),0)/used.length);
+  const meal=used.map(i=>i.name).join(' + ');
+  const why=[main.opened||main.leftover?'uses an opened/leftover item':null,main.age===2?'uses a confirmed use-soon item':null,'fits allowed '+main.method+' execution',side?'completes the meal with a side already on hand':'uses the strongest eligible item'].filter(Boolean).join('; ');
+  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Shopping:</strong> ${side||main.role==='complete'?'MAKE NOW — no shopping required.':'ALMOST THERE — add one simple vegetable/side if available.'}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true)">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false)">Too much work / reject</button></div>`;
+}
+function finishMeal(ids,liked){
+  state.feedback.push({at:new Date().toISOString(),ids,liked});
+  if(liked){state.items=state.items.map(i=>ids.includes(i.id)?{...i,servings:Math.max(0,i.servings-1),preference:Math.min(100,i.preference+5)}:i).filter(i=>i.servings>0)}
+  else{state.items=state.items.map(i=>ids.includes(i.id)?{...i,preference:Math.max(0,i.preference-20)}:i)}
+  persist();render();recommend();
+}
+function loadDemo(){
+ state.profile={methods:['no-cook','microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'};
+ state.items=[
+ {id:101,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',age:2,opened:false,leftover:false,preference:85,health:80},
+ {id:102,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',age:1,opened:true,leftover:false,preference:75,health:85},
+ {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',age:1,opened:false,leftover:false,preference:80,health:80},
+ {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',age:2,opened:true,leftover:true,preference:70,health:60},
+ {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',age:2,opened:false,leftover:false,preference:70,health:55}
+ ];persist();applyProfile();render();
+}
+function applyProfile(){
+ if(!state.profile)return;
+ document.querySelectorAll('#applianceChecks input').forEach(x=>x.checked=state.profile.methods.includes(x.value));
+ skill.value=state.profile.skill;effort.value=state.profile.effort;cleanup.value=state.profile.cleanup;household.value=state.profile.household;lifeMode.value=state.profile.lifeMode;goal.value=state.profile.goal;
+}
+function resetAll(){if(confirm('Clear this browser-only demo?')){localStorage.removeItem(KEY);location.reload()}}
+function toggleSpace(){document.body.classList.toggle('spacious');localStorage.setItem('ff_space',document.body.classList.contains('spacious')?'1':'0')}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
+if(localStorage.getItem('ff_space')==='1')document.body.classList.add('spacious');
+applyProfile();render();
+</script>
+</body>
+</html>
