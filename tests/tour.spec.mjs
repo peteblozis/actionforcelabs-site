@@ -87,6 +87,20 @@ test('FF-ESC-007 / release identity is neutral and current', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'REPEAT LAST STORY' })).toBeVisible();
 });
 
+test('FF-ESC-009 / feedback route is explicit, privacy-safe and user-controlled', async ({ page }) => {
+  await page.goto(tourPath);
+  const link = page.locator('#emailResults');
+  await expect(link).toBeVisible();
+  const href = await link.getAttribute('href');
+  expect(href).toMatch(/^mailto:tester-feedback@actionforgelabs\.com\?/);
+  const decoded = decodeURIComponent(href);
+  expect(decoded).toContain('TOUR field feedback');
+  expect(decoded).toContain('TOUR-FF-RC1');
+  expect(decoded).toContain('privacy-safe test receipt');
+  expect(decoded).not.toMatch(/29\.7382|-98\.1047|\"latitude\"|\"longitude\"|\"coords\"/i);
+  expect(decoded).not.toMatch(/SageForge Core|#ACTS|ForgeShield|MACIE/i);
+});
+
 test('FF-ESC-003 / CLEAR removes the full prior entry in one action', async ({ page }) => {
   await page.goto(tourPath);
   const input = page.locator('#placeInput');
