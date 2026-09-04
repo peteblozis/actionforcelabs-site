@@ -1,0 +1,6 @@
+{
+  "name": "actionforgelabs-site",
+  "private": true,
+  "scripts": {"test:buypoint":"playwright test tests/buypoint.spec.mjs --project=chromium"},
+  "devDependencies": {"@playwright/test":"^1.55.0"}
+}
