@@ -1,0 +1,27 @@
+name: BuyPoint Standalone Provider Contract
+
+on:
+  pull_request:
+    paths:
+      - 'services/buypoint-provider/**'
+      - '.github/workflows/buypoint-provider-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provider-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run fail-closed standalone-provider contract tests
+        run: npm test
+        working-directory: services/buypoint-provider
+      - name: Verify customer boundary
+        run: |
+          ! grep -R -i -E 'sageforge|#acts|forge factory|forgeshield|macie|private core' services/buypoint-provider
