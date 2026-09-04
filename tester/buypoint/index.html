@@ -128,7 +128,7 @@ async function findProduct(){
     return;
   }
   const value=input.value||'';
-  if(method==='photo'||!matchesKnown(value)){$('#entryStatus').textContent='Live provider is not configured, so no exact match or price is claimed for this input.';return}
+  if(method==='photo'||!matchesKnown(value)){$('#entryStatus').textContent='No verified exact match: the live provider is not configured, so no price or recommendation is claimed for this input.';return}
   $('#entryStatus').textContent=`Fixture-only 750 mL match from ${method} input; live provider verification is still required.`;
   ['result','offersCard','contextCard'].forEach(id=>$('#'+id).classList.remove('hidden'));renderDecision();$('#result').scrollIntoView({behavior:'smooth'});
 }
@@ -148,55 +148,6 @@ function saved(){return safeLoad(KEY,[])}function refreshSaved(){const items=sav
 function saveItem(watch=false){const items=saved().filter(x=>x.id!==product.id),target=Number($('#recommended').textContent.replace('$',''));items.unshift({id:product.id,name:product.name,target,watch,savedAt:new Date().toISOString()});localStorage.setItem(KEY,JSON.stringify(items));refreshSaved();alert(watch?'Saved locally with price-and-stock watch intent. Live alerts require the notification provider.':'Saved to My BuyPoint on this device.')}
 $('#save').onclick=()=>saveItem(false);$('#watch').onclick=()=>saveItem(true);$('#openSaved').onclick=()=>{refreshSaved();$('#savedDialog').showModal()};$('#closeSaved').onclick=()=>$('#savedDialog').close();
 $('#photo').onchange=()=>{const f=$('#photo').files[0];$('#entryStatus').textContent=f?`Photo “${f.name}” is ready for private provider verification.`:'No photo selected.'};
-$('#listen').onclick=()=>{const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SpeechRecognition){$('#voiceStatus').textContent='Voice input is unavailable in this browser.';return}const r=new SpeechRecognition();r.lang='en-US';r.interimResults=false;r.onstart=()=>$('#voiceStatus').textContent='Listening…';r.onerror=e=>$('#voiceStatus').textContent=`Voice input unavailable: ${e.error}`;r.onresult=e=>{const heard=e.results[0][0].transcript;$('#query').value=heard;selectMethod('text');$('#entryStatus').textContent=`Heard: “${heard}”. Review, then find your BuyPoint.`};r.start()};
-refreshSaved();renderDecision();
-</script>
-</body>
-</html>
-+Number(n).toFixed(2)}
-function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-function fileData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('photo_read_failed'));reader.readAsDataURL(file)})}
-function hideResults(){['result','offersCard','contextCard'].forEach(id=>$('#'+id).classList.add('hidden'))}
-function fromProvider(payload){
-  const found=payload.result, p=found.product||{}, quantity=[p.quantity_value,p.quantity_unit].filter(x=>x!==null&&x!=='').join(' ');
-  return {
-    id:p.gtin||[p.brand,p.name,p.variant,quantity].filter(Boolean).join('-').toLowerCase().replace(/[^a-z0-9]+/g,'-'),
-    name:p.name||'Matched product',
-    variant:[p.brand,p.variant,quantity].filter(Boolean).join(' · '),
-    quantityMl:p.quantity_unit==='mL'?Number(p.quantity_value)||null:null,
-    recommended:Number(found.recommended_buy_price),
-    guidance:found.guidance,
-    reason:found.reason,
-    live:true,
-    offers:(found.offers||[]).map(o=>({store:o.retailer,price:Number(o.price),sizeMl:p.quantity_unit==='mL'?Number(p.quantity_value)||null:null,shipping:o.shipping,coupon:o.coupon,stock:o.availability,url:o.source_url}))
-  };
-}
-async function providerMatch(input){
-  const response=await fetch(PROVIDER_URL+'/api/buypoint/resolve',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({input})});
-  const payload=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(payload.error||'provider_unavailable');
-  if(payload.result?.status!=='matched')return null;
-  return fromProvider(payload);
-}
-function safeLoad(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
-function selectMethod(next){method=next;$$('.method').forEach(b=>b.classList.toggle('active',b.dataset.method===next));$$('.inputPanel').forEach(p=>p.classList.add('hidden'));$('#'+next+'Panel').classList.remove('hidden');$('#entryStatus').textContent=next==='photo'?'Choose a photo; unknown visual matches fail closed.':'Ready to match the exact product and quantity.'}
-$$('.method').forEach(b=>b.onclick=()=>selectMethod(b.dataset.method));
-function inputValue(){if(method==='text')return $('#query').value.trim();if(method==='barcode')return $('#barcode').value.trim();if(method==='url')return $('#productUrl').value.trim();return ''}
-function matchesKnown(value){const v=value.toLowerCase();return v.includes('bartenura')||v.includes('moscato')||v.includes('220016')}
-function findProduct(){
-  if(method==='photo'){const f=$('#photo').files[0];$('#entryStatus').textContent=f?`Photo “${f.name}” captured locally. Identification provider is not connected; no match claimed.`:'Choose a photo first.';return}
-  const value=inputValue();if(!value){$('#entryStatus').textContent='Add a product name, exact barcode, or URL first.';return}
-  if(!matchesKnown(value)){$('#entryStatus').textContent='No verified exact match in this Release Candidate. BuyPoint will not ask you to research prices or invent an answer.';return}
-  $('#entryStatus').textContent=`Exact 750 mL variant matched from ${method} input.`;
-  ['result','offersCard','contextCard'].forEach(id=>$('#'+id).classList.remove('hidden'));renderDecision();$('#result').scrollIntoView({behavior:'smooth'});
-}
-$('#find').onclick=findProduct;
-function renderDecision(){const prefs=safeLoad(PREF,{}),target=Number(prefs[product.id]||product.recommended),best=Math.min(...product.offers.map(o=>o.price));let action=best<=target?'BUY':best<=target*1.03?'WAIT':'WATCH';$('#recommended').textContent=money(target);$('#best').textContent=money(best);$('#verdict').textContent=action;$('#verdict').className='verdict '+action.toLowerCase();$('#headline').textContent=action==='BUY'?'A verified offer meets your BuyPoint.':action==='WAIT'?'The price is close, but not yet at your BuyPoint.':'The best verified offer is above your BuyPoint.';$('#reason').textContent=`${action} for ${money(target)} or less. The best verified 750 mL comparison is ${money(best)}. Shipping and coupon effects are not silently assumed; stock is shown only when evidenced.`;$('#offers').innerHTML=product.offers.map(o=>`<div class="merchant"><div class="wide"><b>${o.store}</b><div class="small">${o.shipping}</div></div><div><span class="small">Price</span><div class="price">${money(o.price)}</div></div><div><span class="small">Unit</span><div>${money(o.price/7.5)}/100 mL</div></div><div><span class="small">Coupon / stock</span><div class="small">${o.coupon}<br>${o.stock}</div></div></div>`).join('')}
-$('#overridePrice').onclick=()=>{const current=Number($('#recommended').textContent.replace('$','')),raw=prompt('Your preferred BuyPoint',current.toFixed(2)),next=Number(raw);if(!Number.isFinite(next)||next<=0)return;const prefs=safeLoad(PREF,{});prefs[product.id]=next;localStorage.setItem(PREF,JSON.stringify(prefs));renderDecision()};
-function saved(){return safeLoad(KEY,[])}function refreshSaved(){const items=saved();$('#savedCount').textContent=items.length;$('#savedList').innerHTML=items.length?items.map(x=>`<div class="savedItem"><b>${x.name}</b><div class="small">BuyPoint ${money(x.target)} · ${x.watch?'Price & stock watch requested':'Saved item'} · Back-in-stock: unknown</div></div>`).join(''):'<p class="small">No saved items yet.</p>'}
-function saveItem(watch=false){const items=saved().filter(x=>x.id!==product.id),target=Number($('#recommended').textContent.replace('$',''));items.unshift({id:product.id,name:product.name,target,watch,savedAt:new Date().toISOString()});localStorage.setItem(KEY,JSON.stringify(items));refreshSaved();alert(watch?'Saved locally with price-and-stock watch intent. Live alerts require the notification provider.':'Saved to My BuyPoint on this device.')}
-$('#save').onclick=()=>saveItem(false);$('#watch').onclick=()=>saveItem(true);$('#openSaved').onclick=()=>{refreshSaved();$('#savedDialog').showModal()};$('#closeSaved').onclick=()=>$('#savedDialog').close();
-$('#photo').onchange=()=>{const f=$('#photo').files[0];$('#entryStatus').textContent=f?`Photo “${f.name}” is ready. Identification provider is not connected.`:'No photo selected.'};
 $('#listen').onclick=()=>{const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SpeechRecognition){$('#voiceStatus').textContent='Voice input is unavailable in this browser.';return}const r=new SpeechRecognition();r.lang='en-US';r.interimResults=false;r.onstart=()=>$('#voiceStatus').textContent='Listening…';r.onerror=e=>$('#voiceStatus').textContent=`Voice input unavailable: ${e.error}`;r.onresult=e=>{const heard=e.results[0][0].transcript;$('#query').value=heard;selectMethod('text');$('#entryStatus').textContent=`Heard: “${heard}”. Review, then find your BuyPoint.`};r.start()};
 refreshSaved();renderDecision();
 </script>
