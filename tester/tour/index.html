@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <title>TOUR General Field Test</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:760px;margin:auto;padding:18px 16px 48px}.banner{background:#3b2b00;border:1px solid #d8a826;color:#ffd76a;padding:10px 12px;border-radius:12px;font-weight:700}.card{background:#141b2d;border:1px solid #2a3552;border-radius:16px;padding:18px;margin-top:14px}h1{font-size:30px;margin:18px 0 6px}h2{font-size:20px;margin:0 0 10px}p{line-height:1.45;color:#cbd5e1}.status{font-size:16px;font-weight:700}.good{color:#67e8a5}.warn{color:#ffd76a}.bad{color:#fb7185}button,input{width:100%;font-size:18px;border-radius:12px;padding:14px;margin-top:10px}button{border:0;background:#4f9cf9;color:#06101f;font-weight:800}button.secondary{background:#29334d;color:#fff}button.danger{background:#5b2630;color:#fff}input{border:1px solid #46516f;background:#0e1526;color:#fff}.fact{padding:12px 0;border-top:1px solid #28344e}.fact:first-child{border-top:0}.small{font-size:13px;color:#8fa0bd}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none}
+    *{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:760px;margin:auto;padding:18px 16px 48px}.banner{background:#3b2b00;border:1px solid #d8a826;color:#ffd76a;padding:10px 12px;border-radius:12px;font-weight:700}.card{background:#141b2d;border:1px solid #2a3552;border-radius:16px;padding:18px;margin-top:14px}h1{font-size:30px;margin:18px 0 6px}h2{font-size:20px;margin:0 0 10px}p{line-height:1.45;color:#cbd5e1}.status{font-size:16px;font-weight:700}.good{color:#67e8a5}.warn{color:#ffd76a}.bad{color:#fb7185}button,input{width:100%;font-size:18px;border-radius:12px;padding:14px;margin-top:10px}button{border:0;background:#4f9cf9;color:#06101f;font-weight:800}button.secondary{background:#29334d;color:#fff}button.danger{background:#5b2630;color:#fff}.actionLink{display:block;width:100%;font-size:18px;border-radius:12px;padding:14px;margin-top:10px;text-align:center;text-decoration:none;background:#29334d;color:#fff;font-weight:800}input{border:1px solid #46516f;background:#0e1526;color:#fff}.fact{padding:12px 0;border-top:1px solid #28344e}.fact:first-child{border-top:0}.small{font-size:13px;color:#8fa0bd}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none}
   </style>
 </head>
 <body>
@@ -60,12 +60,14 @@
     <h2>Field feedback</h2>
     <div class="row"><button id="pass">✓ WORKED</button><button id="fail" class="danger">✕ SOMETHING'S WRONG</button></div>
     <button id="export" class="secondary">EXPORT FLIGHT RECORDER</button>
+    <a id="emailResults" class="actionLink" href="mailto:tester-feedback@actionforgelabs.com">EMAIL TEST RESULTS</a>
     <p class="small">The Flight Recorder stores timestamps, GPS accuracy/confidence, place labels and test results. It does not persist precise latitude/longitude.</p>
+    <p class="small">Email opens your mail app with a privacy-scrubbed receipt addressed to ActionForge Labs. Nothing is sent automatically.</p>
   </div>
 </div>
 <script>
 const $=s=>document.querySelector(s);
-const KEY='tour.field.v4', LOG='tour.flight.v4', RELEASE='TOUR-FF-RC1';
+const KEY='tour.field.v4', LOG='tour.flight.v4', RELEASE='TOUR-FF-RC1', FEEDBACK_EMAIL='tester-feedback@actionforgelabs.com';
 let watch=null,lastPos=null,lastLookupPos=null,lastLookupAt=0,stories=[],storyIndex=0,lastSpoken='';
 
 function cleanForLog(value){
@@ -80,6 +82,17 @@ function log(type,detail={}){
   let events=[]; try{events=JSON.parse(localStorage.getItem(LOG)||'[]')}catch{}
   events.push({id:crypto.randomUUID(),at:new Date().toISOString(),release:RELEASE,type,detail:cleanForLog(detail)});
   localStorage.setItem(LOG,JSON.stringify(events.slice(-500)));
+  refreshFeedbackLink();
+}
+function feedbackReceipt(){
+  let events=[]; try{events=JSON.parse(localStorage.getItem(LOG)||'[]')}catch{}
+  return {schema:4,release:RELEASE,exportedAt:new Date().toISOString(),events:cleanForLog(events.slice(-25))};
+}
+function refreshFeedbackLink(){
+  const link=$('#emailResults'); if(!link)return;
+  const subject=`TOUR field feedback — ${RELEASE}`;
+  const body=`TOUR privacy-safe test receipt\n\n${JSON.stringify(feedbackReceipt(),null,2)}`;
+  link.href=`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function save(extra={}){
   const x={place:$('#placeInput').value,storyIndex,savedAt:new Date().toISOString(),...extra};
@@ -150,11 +163,11 @@ $('#clear').onclick=()=>{$('#placeInput').value='';$('#placeStatus').textContent
 $('#pause').onclick=pauseNarration;$('#resume').onclick=resumeNarration;$('#repeat').onclick=()=>speak(lastSpoken||'Nothing has been narrated yet.');
 $('#next').onclick=()=>{if(stories.length){storyIndex=(storyIndex+1)%stories.length;render();currentStory('Next nearby story. ')}};
 $('#checkpoint').onclick=()=>save();
-$('#pass').onclick=()=>{log('TEST_RESULT',{result:'PASS',place:$('#placeInput').value});alert('Recorded: WORKED')};
-$('#fail').onclick=()=>{const note=prompt('What went wrong? (wrong place, wrong information, too early, too late, no audio, other)')||'unspecified';log('TEST_RESULT',{result:'FAIL',place:$('#placeInput').value,note});alert('Recorded. Thank you.')};
+$('#pass').onclick=()=>{log('TEST_RESULT',{result:'PASS',place:$('#placeInput').value});alert('Recorded locally. Use EMAIL TEST RESULTS when you are ready to send.')};
+$('#fail').onclick=()=>{const note=prompt('What went wrong? (wrong place, wrong information, too early, too late, no audio, other)')||'unspecified';log('TEST_RESULT',{result:'FAIL',place:$('#placeInput').value,note});alert('Recorded locally. Use EMAIL TEST RESULTS when you are ready to send.')};
 $('#export').onclick=()=>{const data=localStorage.getItem(LOG)||'[]',blob=new Blob([JSON.stringify({schema:4,release:RELEASE,exportedAt:new Date().toISOString(),events:JSON.parse(data)},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='TOUR-flight-recorder.json';a.click();URL.revokeObjectURL(a.href)};
 function net(){const on=navigator.onLine;$('#net').textContent=on?'Online — live place and nearby lookups available':'Offline — using saved stories';log(on?'NETWORK_ONLINE':'NETWORK_OFFLINE',{online:on});if(!on)offlineStory()}
-addEventListener('online',net);addEventListener('offline',net);net();restore();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>log('SW_ERROR',{reason:String(e)}));
+addEventListener('online',net);addEventListener('offline',net);refreshFeedbackLink();net();restore();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>log('SW_ERROR',{reason:String(e)}));
 </script>
 </body>
 </html>
