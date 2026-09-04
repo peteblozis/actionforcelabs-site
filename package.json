@@ -1,0 +1,11 @@
+{
+  "name": "actionforgelabs-site",
+  "private": true,
+  "scripts": {
+    "test:tour": "playwright test tests/tour.spec.mjs",
+    "test:forge": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

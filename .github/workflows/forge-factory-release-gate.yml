@@ -1,0 +1,57 @@
+name: Forge Factory Release Gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tour-release-gate:
+    name: TOUR critical journeys and escape regressions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Static hard gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tester/tour/index.html
+          grep -q 'TOUR General Field Test' tester/tour/index.html
+          grep -q 'data-forge-release="TOUR-FF-RC1"' tester/tour/index.html
+          grep -q 'id="clear"' tester/tour/index.html
+          grep -q 'id="pause"' tester/tour/index.html
+          grep -q 'id="resume"' tester/tour/index.html
+          grep -q 'id="repeat"' tester/tour/index.html
+          ! grep -Eqi 'wedding venue|wedding field test' tester/tour/index.html
+          ! grep -Fq 'ggscoord:`${pos.coords.latitude}|${pos.coords.longitude}`' tester/tour/index.html
+          grep -q "toFixed(2)" tester/tour/index.html
+          grep -q 'tour-field-v4-ff-rc1' tester/tour/sw.js
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install test runner
+        run: npm install
+
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run Forge Factory browser gate
+        run: npm run test:tour
+
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-factory-tour-playwright-evidence
+          path: |
+            artifacts/playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 14
