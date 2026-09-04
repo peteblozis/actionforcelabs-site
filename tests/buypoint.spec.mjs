@@ -48,3 +48,53 @@ test('mobile viewport preserves primary flow and no horizontal overflow', async 
   const overflow = await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+
+test('isolated provider result replaces the dated fixture and preserves evidence fields', async ({ page }) => {
+  await page.addInitScript(() => { window.BUYPOINT_PROVIDER_URL = 'https://provider.example'; });
+  await page.route('https://provider.example/api/buypoint/resolve', async route => {
+    const request = route.request();
+    expect(request.method()).toBe('POST');
+    const posted = request.postDataJSON();
+    expect(posted.input.type).toBe('text');
+    await route.fulfill({
+      status: 200,
+      headers: {'access-control-allow-origin':'*','content-type':'application/json'},
+      body: JSON.stringify({
+        release:'BUYPOINT-PROVIDER-RC1',
+        result:{
+          status:'matched',
+          product:{name:'Example Coffee',brand:'Example',variant:'Dark roast',quantity_value:12,quantity_unit:'oz',gtin:'000123'},
+          offers:[{retailer:'Evidence Store',price:8.49,currency:'USD',package_quantity:'12 oz',unit_price:0.7075,shipping:'Free pickup',coupon:'None evidenced',availability:'In stock',source_url:'https://retailer.example/item',observed_at:'2026-09-04',confidence:'high'}],
+          recommended_buy_price:8,
+          guidance:'WATCH',
+          reason:'The current cited offer is above the recommended price.',
+          back_in_stock_supported:false,
+          limitations:[]
+        },
+        sources:['https://retailer.example/item']
+      })
+    });
+  });
+  await page.goto(path);
+  await page.locator('#query').fill('Example Coffee 12 oz');
+  await page.getByRole('button',{name:'FIND MY BUYPOINT'}).click();
+  await expect(page.locator('#productName')).toHaveText('Example Coffee');
+  await expect(page.locator('#recommended')).toHaveText('$8.00');
+  await expect(page.locator('#verdict')).toHaveText('WATCH');
+  await expect(page.locator('#providerNotice')).toContainText('LIVE private-provider result');
+  await expect(page.getByText('Evidence Store')).toBeVisible();
+});
+
+test('live provider failure does not fall back to a fixture answer', async ({ page }) => {
+  await page.addInitScript(() => { window.BUYPOINT_PROVIDER_URL = 'https://provider.example'; });
+  await page.route('https://provider.example/api/buypoint/resolve', route => route.fulfill({
+    status:503,
+    headers:{'access-control-allow-origin':'*','content-type':'application/json'},
+    body:JSON.stringify({error:'provider_not_configured'})
+  }));
+  await page.goto(path);
+  await page.getByRole('button',{name:'FIND MY BUYPOINT'}).click();
+  await expect(page.locator('#entryStatus')).toContainText(/provider_not_configured/);
+  await expect(page.locator('#result')).toHaveClass(/hidden/);
+});
