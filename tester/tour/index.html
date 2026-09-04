@@ -121,7 +121,9 @@ function norm(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[
 function significantTerms(s){return norm(s).split(' ').filter(t=>t.length>2)}
 function namedScore(name,page){
   const requested=norm(name),title=norm(page.title),terms=significantTerms(name);
+  const primaryTerms=significantTerms(String(name).split(',')[0]);
   if(title===requested) return 100;
+  if(primaryTerms.length&&!primaryTerms.every(term=>title.includes(term))) return -100;
   let score=0;for(const t of terms){if(title.split(' ').includes(t))score+=8;else if(title.includes(t))score+=5;if(norm(page.extract).includes(t))score+=1}
   const titleCoverage=terms.length?terms.filter(t=>title.includes(t)).length/terms.length:0;
   if(titleCoverage===1)score+=15;
@@ -130,7 +132,8 @@ function namedScore(name,page){
 async function lookupNamedPlace(name){
   if(!navigator.onLine)throw new Error('offline');
   $('#placeStatus').textContent=`Looking up “${name}”…`;
-  const search=await fetchWiki({generator:'search',gsrsearch:`intitle:${name} OR ${name}`,gsrnamespace:'0',gsrlimit:'8',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url'});
+  const primary=String(name).split(',')[0].trim();
+  const search=await fetchWiki({generator:'search',gsrsearch:`intitle:"${primary}" OR "${primary}"`,gsrnamespace:'0',gsrlimit:'8',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url'});
   const pages=Object.values(search.query?.pages||{}).filter(x=>x.extract&&x.extract.length>80).map(x=>({...x,_score:namedScore(name,x)})).sort((a,b)=>b._score-a._score);
   const best=pages[0];
   if(!best||best._score<18){$('#placeStatus').textContent=`I couldn't confidently verify “${name}”. I will keep nearby discoveries separate rather than pretending they answer your request.`;log('PLACE_LOOKUP_NO_MATCH',{place:name,candidate:best?.title||null});return null}
