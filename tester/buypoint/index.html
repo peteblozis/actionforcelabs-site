@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#07111f">
+  <meta name="buy-point-release" content="BUYPOINT-UNIFIED-RC1">
+  <title>BuyPoint Unified Concept Test</title>
+  <style>
+    :root{--bg:#07111f;--panel:#101d2f;--line:#2c3f58;--text:#f8fafc;--muted:#a9b8ca;--blue:#66b3ff;--green:#4ade80;--amber:#fbbf24;--red:#fb7185}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07111f,#0b1626 40%,#07111f);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:900px;margin:auto;padding:18px 16px 64px}.eyebrow{color:var(--blue);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}h1{font-size:clamp(32px,8vw,54px);line-height:1;margin:8px 0}.lead{font-size:18px;color:var(--muted);max-width:680px}.card{background:rgba(16,29,47,.96);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px;box-shadow:0 12px 36px #0004}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.methods{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.method{min-height:54px}.method.active{outline:3px solid #66b3ff55;border-color:var(--blue)}button,.button,input{border-radius:12px;border:1px solid var(--line);padding:13px 14px;font:inherit}button,.button{background:#1c3048;color:var(--text);font-weight:800;cursor:pointer;text-decoration:none;text-align:center}button.primary{background:var(--blue);color:#06101f;border:0}button.save{background:#173c2b;border-color:#287747}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}input{width:100%;background:#091423;color:var(--text);font-size:18px}.hidden{display:none!important}.small{font-size:13px;color:var(--muted)}.notice{border-left:4px solid var(--amber);padding-left:12px}.product{display:flex;gap:14px;align-items:center}.bottle{width:62px;height:92px;border-radius:12px 12px 18px 18px;background:linear-gradient(135deg,#2c6da5,#77c9ff);display:grid;place-items:center;color:#07111f;font-weight:900}.verdict{font-size:38px;font-weight:950;letter-spacing:.03em}.watch{color:var(--amber)}.buy{color:var(--green)}.wait{color:var(--red)}.price{font-size:25px;font-weight:900}.merchant{display:grid;grid-template-columns:1.7fr .8fr .8fr 1fr;gap:8px;padding:10px 0;border-top:1px solid var(--line);align-items:center}.merchant:first-child{border-top:0}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#253b56;color:#d7e7fb;font-size:12px;font-weight:800}.timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{background:#0a1625;border-radius:12px;padding:12px}.metric b{display:block;font-size:21px}.sectionTitle{display:flex;justify-content:space-between;gap:12px;align-items:center}.source a{color:#9fd0ff}.panelStatus{min-height:22px}.savedItem{padding:10px 0;border-top:1px solid var(--line)}dialog{background:#101d2f;color:var(--text);border:1px solid var(--line);border-radius:18px;max-width:560px;width:calc(100% - 28px)}dialog::backdrop{background:#000a}.source{font-size:12px;color:var(--muted)}
+    @media(max-width:640px){.methods{grid-template-columns:repeat(2,1fr)}.merchant{grid-template-columns:1fr 1fr}.merchant .wide{grid-column:1/-1}.timeline{grid-template-columns:1fr}.row{display:grid}.product{align-items:flex-start}}
+  </style>
+</head>
+<body>
+<main class="wrap" data-buy-point-release="BUYPOINT-UNIFIED-RC1">
+  <div class="eyebrow">Private concept test · one unified journey</div>
+  <h1>BuyPoint</h1>
+  <p class="lead">Name it, show it, scan it, say it, or paste it. BuyPoint finds the exact item and explains whether to <b>BUY</b>, <b>WAIT</b>, or <b>WATCH</b>—without asking you to do the price research.</p>
+
+  <section class="card" id="entry">
+    <div class="sectionTitle"><h2>What are you considering?</h2><button id="openSaved">My BuyPoint <span id="savedCount">0</span></button></div>
+    <div class="methods" aria-label="Input methods">
+      <button class="method active" data-method="text">⌨️ Type</button><button class="method" data-method="photo">📷 Photo</button><button class="method" data-method="barcode">▥ Barcode</button><button class="method" data-method="voice">🎙️ Voice</button><button class="method" data-method="url">🔗 URL</button>
+    </div>
+    <div id="textPanel" class="inputPanel"><label class="small" for="query">Product name, brand, size or model</label><input id="query" autocomplete="off" value="Bartenura Moscato d'Asti 750 mL"></div>
+    <div id="photoPanel" class="inputPanel hidden"><label class="small" for="photo">Take or choose a product photo</label><input id="photo" type="file" accept="image/*" capture="environment"><p class="small">The concept captures the photo, but a product-vision provider is not yet connected. It will not pretend to identify an unknown item.</p></div>
+    <div id="barcodePanel" class="inputPanel hidden"><label class="small" for="barcode">Enter or scan the exact barcode</label><input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Barcode"><p class="small">Camera scanning is used where the browser supports it. Unrecognized codes fail closed.</p></div>
+    <div id="voicePanel" class="inputPanel hidden"><p class="small">Say the product, exact model or size.</p><button id="listen">START LISTENING</button><p id="voiceStatus" class="panelStatus small">Microphone is off.</p></div>
+    <div id="urlPanel" class="inputPanel hidden"><label class="small" for="productUrl">Paste a shared retailer or product URL</label><input id="productUrl" inputmode="url" autocomplete="off" placeholder="https://..."><p class="small">BuyPoint extracts product clues from the link. A live commerce provider is still required to verify current offer details.</p></div>
+    <button class="primary" id="find">FIND MY BUYPOINT</button>
+    <p id="entryStatus" class="small">Ready to match the exact product and quantity.</p>
+  </section>
+
+  <section class="card hidden" id="result">
+    <div class="product"><div class="bottle">750<br>mL</div><div><span class="pill">EXACT MATCH</span><h2 id="productName">Bartenura Moscato d'Asti DOCG</h2><p id="variant" class="small">750 mL · Italy · Blue bottle</p></div></div>
+    <div class="grid">
+      <div class="metric"><span class="small">Guidance</span><b id="verdict" class="verdict watch">WATCH</b></div>
+      <div class="metric"><span class="small">Recommended Buy Price</span><b id="recommended" class="price">$10.69</b><button id="overridePrice">Override</button></div>
+      <div class="metric"><span class="small">Best verified comparison</span><b id="best" class="price">$11.55</b><span class="small">pickup price</span></div>
+    </div>
+    <h3 id="headline">The best verified offer is above your BuyPoint.</h3>
+    <p id="reason">WATCH for $10.69 or less. That threshold uses the observed Costco baseline; the current visible pickup comparison is $0.86 higher. Shipping and coupon effects are not silently assumed.</p>
+    <div class="row"><button class="save" id="save">SAVE TO MY BUYPOINT</button><button id="watch">WATCH PRICE & STOCK</button></div>
+  </section>
+
+  <section class="card hidden" id="offersCard">
+    <div class="sectionTitle"><h2>Current comparison</h2><span class="pill">normalized to 750 mL</span></div>
+    <div id="offers"></div>
+    <p class="notice small">Provider status: this Release Candidate uses a dated, curated comparison fixture for the concept test. It does not yet have a live commerce provider, so it is <b>not ready for Pete’s full end-to-end test</b>.</p>
+  </section>
+
+  <section class="card hidden" id="contextCard">
+    <h2>Why this BuyPoint?</h2>
+    <div class="timeline"><div class="metric"><span class="small">Observed low</span><b>$10.69</b><span class="small">Costco baseline</span></div><div class="metric"><span class="small">Verified comparison</span><b>$11.55</b><span class="small">H-E-B pickup</span></div><div class="metric"><span class="small">High comparison</span><b>$16.99</b><span class="small">Twin Liquors</span></div></div>
+    <p class="small">Price context captured September 4, 2026. Availability and final checkout totals can change. Back-in-stock status is shown as unknown when the source does not prove it.</p>
+    <div class="source">Sources: <a href="https://www.heb.com/product-detail/bartenura-moscato-d-asti-italy-white-wine/220016">H-E-B</a> · <a href="https://www.totalwine.com/wine/champagne-sparkling-wine/muscatmoscato/dasti/bartenura-moscato/p/10612750">Total Wine</a> · <a href="https://twinliquors.com/shop/product/bartenura-moscato-dasti/5521cefb6561310003bf0300">Twin Liquors</a>. Costco price is Pete’s observed baseline.</div>
+  </section>
+
+  <dialog id="savedDialog"><h2>My BuyPoint</h2><div id="savedList"></div><button id="closeSaved">CLOSE</button></dialog>
+</main>
+<script>
+const RELEASE='BUYPOINT-UNIFIED-RC1', KEY='buypoint.saved.v1', PREF='buypoint.preferences.v1';
+const product={id:'bartenura-moscato-dasti-750',name:"Bartenura Moscato d'Asti DOCG",variant:'750 mL · Italy · Blue bottle',quantityMl:750,recommended:10.69,offers:[
+  {store:'H-E-B',price:11.55,sizeMl:750,shipping:'Pickup; shipping not verified',coupon:'None verified',stock:'Visible listing',url:'https://www.heb.com/product-detail/bartenura-moscato-d-asti-italy-white-wine/220016'},
+  {store:"Spec's",price:11.55,sizeMl:750,shipping:'Store/location sensitive',coupon:'None verified',stock:'Availability not proven',url:'https://specsonline.com/shop/wine/bartenura-moscato-2013/'},
+  {store:'Total Wine',price:15.99,sizeMl:750,shipping:'Location sensitive',coupon:'Mix 6: $14.39 each',stock:'Availability not proven',url:'https://www.totalwine.com/wine/champagne-sparkling-wine/muscatmoscato/dasti/bartenura-moscato/p/10612750'},
+  {store:'Twin Liquors',price:16.99,sizeMl:750,shipping:'Pickup; shipping not verified',coupon:'None verified',stock:'Visible listing',url:'https://twinliquors.com/shop/product/bartenura-moscato-dasti/5521cefb6561310003bf0300'}]};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let method='text';
+function money(n){return '$'+Number(n).toFixed(2)}
+function safeLoad(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
+function selectMethod(next){method=next;$$('.method').forEach(b=>b.classList.toggle('active',b.dataset.method===next));$$('.inputPanel').forEach(p=>p.classList.add('hidden'));$('#'+next+'Panel').classList.remove('hidden');$('#entryStatus').textContent=next==='photo'?'Choose a photo; unknown visual matches fail closed.':'Ready to match the exact product and quantity.'}
+$$('.method').forEach(b=>b.onclick=()=>selectMethod(b.dataset.method));
+function inputValue(){if(method==='text')return $('#query').value.trim();if(method==='barcode')return $('#barcode').value.trim();if(method==='url')return $('#productUrl').value.trim();return ''}
+function matchesKnown(value){const v=value.toLowerCase();return v.includes('bartenura')||v.includes('moscato')||v.includes('220016')}
+function findProduct(){
+  if(method==='photo'){const f=$('#photo').files[0];$('#entryStatus').textContent=f?`Photo “${f.name}” captured locally. Identification provider is not connected; no match claimed.`:'Choose a photo first.';return}
+  const value=inputValue();if(!value){$('#entryStatus').textContent='Add a product name, exact barcode, or URL first.';return}
+  if(!matchesKnown(value)){$('#entryStatus').textContent='No verified exact match in this Release Candidate. BuyPoint will not ask you to research prices or invent an answer.';return}
+  $('#entryStatus').textContent=`Exact 750 mL variant matched from ${method} input.`;
+  ['result','offersCard','contextCard'].forEach(id=>$('#'+id).classList.remove('hidden'));renderDecision();$('#result').scrollIntoView({behavior:'smooth'});
+}
+$('#find').onclick=findProduct;
+function renderDecision(){const prefs=safeLoad(PREF,{}),target=Number(prefs[product.id]||product.recommended),best=Math.min(...product.offers.map(o=>o.price));let action=best<=target?'BUY':best<=target*1.03?'WAIT':'WATCH';$('#recommended').textContent=money(target);$('#best').textContent=money(best);$('#verdict').textContent=action;$('#verdict').className='verdict '+action.toLowerCase();$('#headline').textContent=action==='BUY'?'A verified offer meets your BuyPoint.':action==='WAIT'?'The price is close, but not yet at your BuyPoint.':'The best verified offer is above your BuyPoint.';$('#reason').textContent=`${action} for ${money(target)} or less. The best verified 750 mL comparison is ${money(best)}. Shipping and coupon effects are not silently assumed; stock is shown only when evidenced.`;$('#offers').innerHTML=product.offers.map(o=>`<div class="merchant"><div class="wide"><b>${o.store}</b><div class="small">${o.shipping}</div></div><div><span class="small">Price</span><div class="price">${money(o.price)}</div></div><div><span class="small">Unit</span><div>${money(o.price/7.5)}/100 mL</div></div><div><span class="small">Coupon / stock</span><div class="small">${o.coupon}<br>${o.stock}</div></div></div>`).join('')}
+$('#overridePrice').onclick=()=>{const current=Number($('#recommended').textContent.replace('$','')),raw=prompt('Your preferred BuyPoint',current.toFixed(2)),next=Number(raw);if(!Number.isFinite(next)||next<=0)return;const prefs=safeLoad(PREF,{});prefs[product.id]=next;localStorage.setItem(PREF,JSON.stringify(prefs));renderDecision()};
+function saved(){return safeLoad(KEY,[])}function refreshSaved(){const items=saved();$('#savedCount').textContent=items.length;$('#savedList').innerHTML=items.length?items.map(x=>`<div class="savedItem"><b>${x.name}</b><div class="small">BuyPoint ${money(x.target)} · ${x.watch?'Price & stock watch requested':'Saved item'} · Back-in-stock: unknown</div></div>`).join(''):'<p class="small">No saved items yet.</p>'}
+function saveItem(watch=false){const items=saved().filter(x=>x.id!==product.id),target=Number($('#recommended').textContent.replace('$',''));items.unshift({id:product.id,name:product.name,target,watch,savedAt:new Date().toISOString()});localStorage.setItem(KEY,JSON.stringify(items));refreshSaved();alert(watch?'Saved locally with price-and-stock watch intent. Live alerts require the notification provider.':'Saved to My BuyPoint on this device.')}
+$('#save').onclick=()=>saveItem(false);$('#watch').onclick=()=>saveItem(true);$('#openSaved').onclick=()=>{refreshSaved();$('#savedDialog').showModal()};$('#closeSaved').onclick=()=>$('#savedDialog').close();
+$('#photo').onchange=()=>{const f=$('#photo').files[0];$('#entryStatus').textContent=f?`Photo “${f.name}” is ready. Identification provider is not connected.`:'No photo selected.'};
+$('#listen').onclick=()=>{const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SpeechRecognition){$('#voiceStatus').textContent='Voice input is unavailable in this browser.';return}const r=new SpeechRecognition();r.lang='en-US';r.interimResults=false;r.onstart=()=>$('#voiceStatus').textContent='Listening…';r.onerror=e=>$('#voiceStatus').textContent=`Voice input unavailable: ${e.error}`;r.onresult=e=>{const heard=e.results[0][0].transcript;$('#query').value=heard;selectMethod('text');$('#entryStatus').textContent=`Heard: “${heard}”. Review, then find your BuyPoint.`};r.start()};
+refreshSaved();renderDecision();
+</script>
+</body>
+</html>
