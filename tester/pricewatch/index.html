@@ -1,20 +1,12 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PriceWatch Tester</title>
-<style>body{font-family:Arial;margin:24px;max-width:1100px}input,textarea,select{width:100%;padding:8px;margin:4px 0 10px}button{padding:9px 12px;margin:4px}table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}.buy{color:green;font-weight:bold}.wait{color:#b36b00}.paused{color:#a00}</style></head>
-<body><h1>PriceWatch Tester</h1><p>Standalone tester build. Enter an item, target price, current test price, and exact variant if needed.</p>
-<h2>Add / Edit Item</h2><input type="hidden" id="editId"><label>Product name</label><input id="name"><label>URL</label><input id="url"><label>Exact variant / size</label><input id="variant"><label>Target price</label><input id="target" type="number" step="0.01"><label>Current test price</label><input id="current" type="number" step="0.01"><label>Net price adjustment/coupon</label><input id="adj" type="number" step="0.01" value="0"><label>Status</label><select id="active"><option value="true">Active</option><option value="false">Paused</option></select><label>Notes / SKU / ASIN / UPC</label><textarea id="notes"></textarea><button onclick="save()">Save</button><button onclick="clearForm()">Clear</button><button onclick="demo()">Load Demo</button><button onclick="wipe()">Clear All</button>
-<h2>Watchlist</h2><table><thead><tr><th>Item</th><th>Variant</th><th>Target</th><th>Current</th><th>Effective</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table>
-<h2>Import / Export</h2><button onclick="exportCSV()">Export CSV</button><textarea id="csv" placeholder="Paste CSV here to import"></textarea><button onclick="importCSV()">Import CSV</button>
-<h2>Feedback</h2><textarea id="feedback" placeholder="What should be improved?"></textarea><button onclick="exportFeedback()">Export Feedback</button>
-<script>
-const KEY="pw_tester_v1";function items(){return JSON.parse(localStorage.getItem(KEY)||"[]")}function setItems(x){localStorage.setItem(KEY,JSON.stringify(x));render()}function val(id){return document.getElementById(id).value.trim()}function money(n){return isNaN(Number(n))||n===""?"":"$"+Number(n).toFixed(2)}function eff(i){return Number(i.current||0)-Number(i.adj||0)}function q(i){return i.active&&Number(i.target)>0&&eff(i)<=Number(i.target)}
-function save(){let a=items(),id=val("editId")||String(Date.now()),i={id,name:val("name"),url:val("url"),variant:val("variant"),target:val("target"),current:val("current"),adj:val("adj"),active:document.getElementById("active").value==="true",notes:val("notes")};if(!i.name){alert("Enter product name.");return}let k=a.findIndex(x=>x.id===id);if(k>=0)a[k]=i;else a.push(i);setItems(a);clearForm()}
-function edit(id){let i=items().find(x=>x.id===id);if(!i)return;["editId","name","url","variant","target","current","adj","notes"].forEach(k=>document.getElementById(k).value=i[k]||"");document.getElementById("active").value=i.active?"true":"false"}
-function del(id){setItems(items().filter(x=>x.id!==id))}function clearForm(){["editId","name","url","variant","target","current","notes"].forEach(k=>document.getElementById(k).value="");document.getElementById("adj").value="0";document.getElementById("active").value="true"}
-function render(){let r=document.getElementById("rows");r.innerHTML="";items().forEach(i=>{let result=!i.active?'<span class=paused>PAUSED</span>':q(i)?'<span class=buy>BUY NOW</span>':'<span class=wait>WAIT</span>';r.innerHTML+=`<tr><td><b>${i.name}</b><br><small>${i.url||""}</small></td><td>${i.variant||""}<br><small>${i.notes||""}</small></td><td>${money(i.target)}</td><td>${money(i.current)}</td><td>${money(eff(i))}</td><td>${result}</td><td><button onclick="edit('${i.id}')">Edit</button><button onclick="del('${i.id}')">Delete</button></td></tr>`})}
-function demo(){setItems([{id:"1",name:"Sample Bulk Item",url:"",variant:"96 count",target:"56",current:"54.99",adj:"0",active:true,notes:"Demo BUY NOW"},{id:"2",name:"Sample Exact Variant",url:"",variant:"Large / exact variant",target:"299",current:"319",adj:"0",active:true,notes:"Demo WAIT"}])}
-function wipe(){if(confirm("Clear all test data?"))setItems([])}
-function csvCell(v){v=String(v??"");return /[",\n]/.test(v)?'"'+v.replaceAll('"','""')+'"':v}function exportCSV(){let h=["name","url","variant","target","current","adj","active","notes"],out=[h.join(",")].concat(items().map(i=>h.map(k=>csvCell(i[k])).join(",")));download("pricewatch_export.csv",out.join("\n"))}
-function importCSV(){let t=val("csv");if(!t)return;let lines=t.split(/\r?\n/),h=lines[0].split(",");let a=[];for(let n=1;n<lines.length;n++){let v=lines[n].split(","),i={id:String(Date.now()+n)};h.forEach((k,j)=>i[k]=v[j]||"");i.active=String(i.active).toLowerCase()!=="false";a.push(i)}setItems(a)}
-function exportFeedback(){download("pricewatch_feedback.txt",val("feedback"))}function download(fn,text){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=fn;a.click()}render();
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="refresh" content="0;url=/tester/buypoint/">
+  <title>BuyPoint moved</title>
+  <style>body{margin:0;background:#07111f;color:#f8fafc;font:18px/1.5 system-ui,sans-serif;display:grid;min-height:100vh;place-items:center}.card{max-width:520px;margin:20px;padding:24px;border:1px solid #2c3f58;border-radius:18px;background:#101d2f}a{color:#66b3ff}</style>
+</head>
+<body><main class="card"><h1>BuyPoint has replaced this test flow</h1><p>The old Fairsight data-entry test is retired in this development lane.</p><p><a href="/tester/buypoint/">Open the unified BuyPoint concept</a></p></main></body>
+</html>

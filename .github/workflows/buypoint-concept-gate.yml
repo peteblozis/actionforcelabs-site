@@ -1,0 +1,43 @@
+name: BuyPoint Unified Concept Gate
+
+on:
+  pull_request:
+    paths:
+      - 'tester/buypoint/**'
+      - 'services/buypoint-provider/**'
+      - 'tests/buypoint.spec.mjs'
+      - 'package.json'
+      - 'playwright.config.mjs'
+      - '.github/workflows/buypoint-concept-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-mobile-and-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test tests/buypoint.spec.mjs --project=chromium
+
+  standalone-provider-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run fail-closed provider contract tests
+        run: npm test
+        working-directory: services/buypoint-provider
+      - name: Verify customer-product isolation
+        run: |
+          ! grep -R -i -E 'sageforge|#acts|forge factory|forgeshield|macie|private core' services/buypoint-provider

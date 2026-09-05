@@ -1,0 +1,8 @@
+{
+  "name": "buypoint-provider",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/provider.test.mjs"
+  }
+}
