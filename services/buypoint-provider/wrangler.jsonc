@@ -1,4 +1,7 @@
 {
+  // Isolated provider: Cloudflare Builds production branch = feature/worth-it-relaunch.
+  // Build command = blank; root directory = services/buypoint-provider.
+  // Store BUYPOINT_OPENAI_API_KEY as a runtime secret, never a build variable.
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "buypoint-provider-preview",
   "main": "src/index.js",
