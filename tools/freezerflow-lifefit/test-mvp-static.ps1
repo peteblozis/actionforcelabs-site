@@ -21,7 +21,7 @@ $required=@(
   "logic.js"
 )
 foreach($term in $required){
-  if($combined.IndexOf($term,[System.StringComparison]::OrdinalIgnoreCase)-lt 0){
+  if($content.IndexOf($term,[System.StringComparison]::OrdinalIgnoreCase)-lt 0){
     throw "Missing required FreezerFlow contract term: $term"
   }
 }
