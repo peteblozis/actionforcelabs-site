@@ -120,6 +120,7 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
     </div>
   </section>
 </main>
+<script src="/tester/freezerflow-lifefit/logic.js"></script>
 <script>
 const KEY='freezerflow_lifefit_mvp_v1';
 const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[]}');
@@ -149,17 +150,8 @@ function render(){
   const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
   useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
 }
-function rejectReason(i){
-  if(!state.profile)return 'LifeFit profile not saved';
-  if(!state.profile.methods.includes(i.method))return 'requires '+i.method+', which is not allowed';
-  return '';
-}
-function safety(i){
-  if(i.leftover)return 'Reheat the portion you will eat to 165°F.';
-  if(/fish|salmon|trout|cod|tilapia/i.test(i.name))return 'If raw fish, cook to at least 145°F in the thickest part.';
-  if(/stuffed/i.test(i.name))return 'For a stuffed item, verify 165°F in the center/stuffing.';
-  return 'Follow the package or validated prep card and verify doneness before serving.';
-}
+function rejectReason(i){return FreezerFlowLogic.rejectReason(i,state.profile)}
+function safety(i){return FreezerFlowLogic.safety(i)}
 function prep(i){
   if(i.method==='no-cook')return 'No cooking. Portion the amount you plan to eat and keep the remainder refrigerated as appropriate.';
   if(i.method==='microwave')return 'Microwave using the package/saved prep-card time. Check the center before serving.';
@@ -168,12 +160,12 @@ function prep(i){
 }
 function recommend(){
   if(!state.profile){decisionCard.innerHTML='<p class="warn"><strong>Blocked:</strong> Save the LifeFit profile first.</p>';return}
-  const eligible=state.items.filter(i=>!rejectReason(i)).sort((a,b)=>priority(b)-priority(a));
-  if(!eligible.length){decisionCard.innerHTML='<p class="warn"><strong>No eligible meal.</strong> Inventory exists, but none matches the allowed cooking methods. Add an eligible item or explicitly change LifeFit.</p>';return}
-  let main=eligible.find(i=>i.role==='complete')||eligible.find(i=>i.role==='protein'||i.role==='breakfast')||eligible[0];
-  let side=eligible.find(i=>i.id!==main.id&&i.role==='side');
-  const used=[main,...(side?[side]:[])];
-  const avg=Math.round(used.reduce((s,i)=>s+priority(i),0)/used.length);
+  const result=FreezerFlowLogic.chooseRecommendation(state.items,state.profile);
+  if(result.status!=='OK'){decisionCard.innerHTML='<p class="warn"><strong>No eligible meal.</strong> '+esc(result.reason)+'. Add an eligible item or explicitly change LifeFit.</p>';return}
+  const main=result.main;
+  const side=result.side;
+  const used=result.used;
+  const avg=result.score;
   const meal=used.map(i=>i.name).join(' + ');
   const why=[main.opened||main.leftover?'uses an opened/leftover item':null,main.age===2?'uses a confirmed use-soon item':null,'fits allowed '+main.method+' execution',side?'completes the meal with a side already on hand':'uses the strongest eligible item'].filter(Boolean).join('; ');
   decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Shopping:</strong> ${side||main.role==='complete'?'MAKE NOW — no shopping required.':'ALMOST THERE — add one simple vegetable/side if available.'}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true)">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false)">Too much work / reject</button></div>`;
