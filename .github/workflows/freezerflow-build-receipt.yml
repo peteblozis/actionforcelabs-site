@@ -28,6 +28,10 @@ jobs:
         shell: pwsh
         run: node ./tools/freezerflow-lifefit/test-mvp-logic.cjs
 
+      - name: Run storage adapter tests
+        shell: pwsh
+        run: node ./tools/freezerflow-lifefit/test-storage-adapter.cjs
+
       - name: Build isolated tester package
         shell: pwsh
         run: |
@@ -67,6 +71,7 @@ jobs:
           }
           if (!(Test-Path artifacts/freezerflow-package/freezerflow-lifefit/index.html)) { throw "Missing tester index" }
           if (!(Test-Path artifacts/freezerflow-package/freezerflow-lifefit/logic.js)) { throw "Missing tester logic" }
+          if (!(Test-Path artifacts/freezerflow-package/freezerflow-lifefit/storage-adapter.js)) { throw "Missing tester storage adapter" }
           Write-Host "FREEZERFLOW PACKAGE BOUNDARY PASSED"
 
       - name: Upload exact tested package
