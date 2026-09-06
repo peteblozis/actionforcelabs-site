@@ -3,6 +3,18 @@
   if(typeof module==='object'&&module.exports){module.exports=api;}
   else{root.FreezerFlowLogic=api;}
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
+  function positiveQuantity(item){
+    return Number.isFinite(Number(item.servings)) && Number(item.servings)>0;
+  }
+  function householdSize(profile){
+    const size=Number(profile&&profile.household);
+    return Number.isFinite(size)&&size>0?size:1;
+  }
+  function confirmedRequirements(item){
+    return Number.isFinite(Number(item.skill)) &&
+      Number.isFinite(Number(item.effort)) &&
+      Number.isFinite(Number(item.cleanup));
+  }
   function executionFit(item,profile){
     return !!(profile && Array.isArray(profile.methods) && profile.methods.includes(item.method));
   }
@@ -17,7 +29,13 @@
   }
   function rejectReason(item,profile){
     if(!profile)return 'LifeFit profile not saved';
+    if(!positiveQuantity(item))return 'has no confirmed positive quantity';
     if(!executionFit(item,profile))return 'requires '+item.method+', which is not allowed';
+    if(!confirmedRequirements(item))return 'has unconfirmed skill, effort, or cleanup requirements';
+    if(Number(item.skill)>Number(profile.skill))return 'requires more kitchen skill than the saved LifeFit limit';
+    if(Number(item.effort)>Number(profile.effort))return 'requires more effort than the saved LifeFit limit';
+    if(Number(item.cleanup)>Number(profile.cleanup))return 'requires more cleanup than the saved LifeFit limit';
+    if(Number(item.servings)<householdSize(profile))return 'does not have enough confirmed portions for this household';
     return '';
   }
   function safety(item){
@@ -27,18 +45,25 @@
     return 'Follow the package or validated prep card and verify doneness before serving.';
   }
   function classifyMeal(main,side){
+    if(!main)return 'NO_ELIGIBLE';
     if(main.role==='complete'||side)return 'MAKE NOW';
     return 'ALMOST THERE';
   }
   function chooseRecommendation(items,profile){
     if(!profile)return {status:'BLOCKED',reason:'LifeFit profile not saved'};
     const eligible=items.filter(i=>!rejectReason(i,profile)).sort((a,b)=>priority(b,profile)-priority(a,profile));
-    if(!eligible.length)return {status:'NO_ELIGIBLE',reason:'No inventory item matches the saved LifeFit cooking methods'};
-    const main=eligible.find(i=>i.role==='complete')||eligible.find(i=>i.role==='protein'||i.role==='breakfast')||eligible[0];
+    if(!eligible.length)return {status:'NO_ELIGIBLE',reason:'No inventory item satisfies the saved LifeFit limits and confirmed household quantity'};
+    const main=eligible.find(i=>i.role==='complete')||eligible.find(i=>i.role==='protein'||i.role==='breakfast')||null;
+    if(!main)return {status:'NO_ELIGIBLE',reason:'No eligible main, protein, breakfast, or complete meal is available'};
     const side=eligible.find(i=>i.id!==main.id&&i.role==='side')||null;
     const used=[main].concat(side?[side]:[]);
     const score=Math.round(used.reduce((sum,i)=>sum+priority(i,profile),0)/used.length);
-    return {status:'OK',main,side,used,score,mealClass:classifyMeal(main,side)};
+    return {status:'OK',main,side,used,score,mealClass:classifyMeal(main,side),portions:householdSize(profile)};
   }
-  return {executionFit,priority,rejectReason,safety,classifyMeal,chooseRecommendation};
+  function consumeItems(items,ids,profile){
+    const amount=householdSize(profile);
+    const selected=new Set(ids);
+    return items.map(i=>selected.has(i.id)?{...i,servings:Math.max(0,Number(i.servings)-amount),preference:Math.min(100,(Number.isFinite(i.preference)?i.preference:70)+5)}:i).filter(i=>i.servings>0);
+  }
+  return {positiveQuantity,householdSize,confirmedRequirements,executionFit,priority,rejectReason,safety,classifyMeal,chooseRecommendation,consumeItems};
 });
