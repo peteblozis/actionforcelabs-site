@@ -19,6 +19,14 @@ assert.equal(rec.status,'OK');
 assert.equal(rec.main.id,salmon.id,'blocked complete meal must not beat eligible protein');
 assert.equal(rec.side.id,broccoli.id,'eligible side should complete the meal');
 assert.equal(rec.mealClass,'MAKE NOW');
+assert.deepEqual(rec.shoppingGaps,[],'owned side means no shopping gap');
+
+const almost=L.chooseRecommendation([salmon],profile);
+assert.equal(almost.mealClass,'ALMOST THERE','protein without side should be classified as almost there');
+assert.deepEqual(almost.shoppingGaps,['simple vegetable or salad'],'protein gap must be specific and deterministic');
+
+const breakfast=L.chooseRecommendation([item({id:9,name:'Egg bites',role:'breakfast',method:'microwave',skill:1,effort:1,cleanup:1})],profile);
+assert.deepEqual(breakfast.shoppingGaps,['fruit or simple produce add-on'],'breakfast gap should suggest a simple produce add-on');
 
 assert.equal(L.chooseRecommendation([skillet],profile).status,'NO_ELIGIBLE','all-blocked inventory must fail closed');
 assert.equal(L.chooseRecommendation([item({role:'side'}),item({id:2,role:'side',method:'microwave'})],profile).status,'NO_ELIGIBLE','side-only inventory is not a complete meal');
