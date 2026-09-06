@@ -44,6 +44,15 @@ assert.equal(L.inventoryTrusted(item({inferred:true,sourceConfidence:.5})),false
 assert.match(L.rejectReason(item({inferred:true,sourceConfidence:.5}),profile),/confirmation/,'uncertain inferred inventory must fail closed');
 assert.equal(L.inventoryTrusted(item({inferred:true,sourceConfidence:.8})),true,'high-confidence inferred inventory may remain eligible');
 
+assert.equal(L.healthFit(item({health:100,healthConfirmed:false})),50,'unconfirmed health data must be neutral');
+assert.equal(L.priority(item({health:100,healthConfirmed:false}),profile),L.priority(item({health:0,healthConfirmed:false}),profile),'unconfirmed health numbers must not change ranking');
+assert.ok(L.priority(item({health:100,healthConfirmed:true}),profile)>L.priority(item({health:0,healthConfirmed:true}),profile),'confirmed health fit may affect ranking');
+
+const avoidProfile={...profile,avoidTerms:['mushroom']};
+assert.match(L.rejectReason(item({name:'Mushroom ravioli'}),avoidProfile),/food-avoid preference/,'saved food avoid term must hard-block matching item names');
+assert.match(L.rejectReason(item({name:'Pasta bowl',preferenceTags:'contains mushroom'}),avoidProfile),/food-avoid preference/,'saved food avoid term must hard-block confirmed preference tags');
+assert.equal(L.rejectReason(item({name:'Salmon fillet'}),avoidProfile),'','unrelated food remains eligible');
+
 const family={...profile,household:4};
 const familyItems=[item({servings:4}),item({id:2,name:'Broccoli',role:'side',method:'microwave',servings:4,skill:1,effort:1,cleanup:1})];
 const consumed=L.consumeItems(familyItems,[1,2],family);
@@ -72,6 +81,7 @@ assert.equal(leftovers.leftover,true,'created leftover must be first-class lefto
 assert.equal(leftovers.opened,true,'created leftover must be treated as opened');
 assert.equal(leftovers.loc,'Fridge','created leftover defaults to fridge');
 assert.equal(leftovers.servings,2,'created leftover preserves confirmed servings');
+assert.equal(leftovers.healthConfirmed,false,'new leftovers do not invent a health score');
 assert.match(L.safety(leftovers),/165°F/,'created leftovers inherit the reheat safety rule');
 
 console.log('FREEZERFLOW MVP LOGIC TESTS PASSED');
