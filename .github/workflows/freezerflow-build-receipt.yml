@@ -1,0 +1,71 @@
+name: FreezerFlow Build Receipt
+
+on:
+  pull_request:
+    paths:
+      - "tester/freezerflow-lifefit/**"
+      - "tools/freezerflow-lifefit/**"
+      - ".github/workflows/freezerflow-build-receipt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-receipt:
+    name: FreezerFlow tested package
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run static contract
+        shell: pwsh
+        run: ./tools/freezerflow-lifefit/test-mvp-static.ps1
+
+      - name: Run decision logic tests
+        shell: pwsh
+        run: node ./tools/freezerflow-lifefit/test-mvp-logic.cjs
+
+      - name: Build isolated tester package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path artifacts/freezerflow-package | Out-Null
+          Copy-Item -Recurse -Force tester/freezerflow-lifefit artifacts/freezerflow-package/freezerflow-lifefit
+          $manifest = [ordered]@{
+            product = "FreezerFlow LifeFit"
+            source_sha = "${{ github.event.pull_request.head.sha || github.sha }}"
+            pull_request = "${{ github.event.pull_request.number || '' }}"
+            generated_utc = (Get-Date).ToUniversalTime().ToString("o")
+            package_scope = "tester/freezerflow-lifefit only"
+            source_pass_required = $true
+            contains_private_core = $false
+          }
+          $manifest | ConvertTo-Json | Set-Content -Encoding UTF8 artifacts/freezerflow-package/manifest.json
+          Compress-Archive -Path artifacts/freezerflow-package/* -DestinationPath artifacts/freezerflow-lifefit-tester.zip -Force
+
+      - name: Verify package boundary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = Get-ChildItem -Recurse artifacts/freezerflow-package | ForEach-Object { $_.FullName }
+          $forbidden = @("src/sfc-profile.js","sageforge","forge-factory","public/admin")
+          foreach ($term in $forbidden) {
+            if (($files -join "`n").IndexOf($term,[System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+              throw "Forbidden private/internal path entered FreezerFlow package: $term"
+            }
+          }
+          if (!(Test-Path artifacts/freezerflow-package/freezerflow-lifefit/index.html)) { throw "Missing tester index" }
+          if (!(Test-Path artifacts/freezerflow-package/freezerflow-lifefit/logic.js)) { throw "Missing tester logic" }
+          Write-Host "FREEZERFLOW PACKAGE BOUNDARY PASSED"
+
+      - name: Upload exact tested package
+        uses: actions/upload-artifact@v4
+        with:
+          name: freezerflow-lifefit-tester-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            artifacts/freezerflow-lifefit-tester.zip
+            artifacts/freezerflow-package/manifest.json
+          if-no-files-found: error
