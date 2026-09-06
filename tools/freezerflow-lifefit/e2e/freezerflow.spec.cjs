@@ -161,10 +161,9 @@ test('cooking extra portions deducts actual ingredients and creates only the tru
   await page.getByRole('button', { name: 'Ate it / liked it' }).click();
 
   await selectTab(page, /2 · Inventory/);
-  await expect(page.locator('#inventoryList')).not.toContainText('Salmon fillet');
-  await expect(page.locator('#inventoryList')).not.toContainText('Broccoli');
-  await expect(page.locator('#inventoryList')).toContainText('Salmon fillet + Broccoli leftovers');
-  await expect(page.locator('#inventoryList')).toContainText('2 serving(s)');
+  await expect(page.locator('#inventoryList .item')).toHaveCount(1);
+  await expect(page.locator('#inventoryList .item')).toContainText('Salmon fillet + Broccoli leftovers');
+  await expect(page.locator('#inventoryList .item')).toContainText('2 serving(s)');
 
   await selectTab(page, /3 · Best Meal/);
   await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
