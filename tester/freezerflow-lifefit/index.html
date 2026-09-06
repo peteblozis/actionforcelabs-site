@@ -86,6 +86,7 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
       <div class="checks" style="margin-top:12px">
         <label class="check"><input id="opened" type="checkbox"> Opened / partial</label>
         <label class="check"><input id="leftover" type="checkbox"> Leftover / already cooked</label>
+        <label class="check"><input id="inferred" type="checkbox"> Added by scan / estimate — confirm before recommendation</label>
       </div>
       <button class="btn" onclick="addItem()">Add item</button>
     </div>
@@ -141,22 +142,20 @@ function addItem(){
   const name=itemName.value.trim(); if(!name){alert('Enter an item name.');return}
   const quantity=Number(servings.value);
   if(!Number.isFinite(quantity)||quantity<=0){alert('Enter a confirmed quantity greater than zero.');return}
-  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:quantity,method:itemMethod.value,skill:Number(itemSkill.value),effort:Number(itemEffort.value),cleanup:Number(itemCleanup.value),age:+age.value,opened:opened.checked,leftover:leftover.checked,preference:70,health:70});
-  itemName.value='';opened.checked=false;leftover.checked=false;age.value='0';servings.value='1';persist();render();
+  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:quantity,method:itemMethod.value,skill:Number(itemSkill.value),effort:Number(itemEffort.value),cleanup:Number(itemCleanup.value),age:+age.value,opened:opened.checked,leftover:leftover.checked,inferred:inferred.checked,sourceConfidence:inferred.checked?0.5:1,lastConfirmedAt:inferred.checked?null:new Date().toISOString(),preference:70,health:70});
+  itemName.value='';opened.checked=false;leftover.checked=false;inferred.checked=false;age.value='0';servings.value='1';persist();render();
 }
 function removeItem(id){state.items=state.items.filter(x=>x.id!==id);persist();render()}
-function executionFit(i){return state.profile&&state.profile.methods.includes(i.method)?100:0}
-function priority(i){
-  const waste=i.age===2?100:i.age===1?70:35;
-  const exec=executionFit(i);
-  const complete=i.role==='complete'?100:(i.role==='protein'||i.role==='side'?75:55);
-  const openedUrg=i.leftover?100:i.opened?90:35;
-  return Math.round(.30*waste+.20*exec+.15*complete+.15*openedUrg+.10*i.preference+.10*i.health);
+function confirmItem(id){
+  state.items=state.items.map(i=>i.id===id?FreezerFlowLogic.reconcileItem(i,'STILL_HERE'):i);
+  persist();render();
 }
+function executionFit(i){return FreezerFlowLogic.executionFit(i,state.profile)?100:0}
+function priority(i){return FreezerFlowLogic.priority(i,state.profile)}
 function render(){
-  inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''}<div class="small">${i.servings} confirmed serving(s) · ${esc(i.role)} · ${esc(i.method)} · skill ${i.skill??"?"}/effort ${i.effort??"?"}/cleanup ${i.cleanup??"?"} · Use Priority ${priority(i)}/100</div></div><button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div>`).join(''):'<p class="muted">No inventory yet.</p>';
+  inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''} ${i.inferred?'<span class="pill use">NEEDS CONFIRMATION</span>':''}<div class="small">${i.servings} serving(s) · ${esc(i.role)} · ${esc(i.method)} · skill ${i.skill??"?"}/effort ${i.effort??"?"}/cleanup ${i.cleanup??"?"} · Use Priority ${priority(i)}/100${i.inferred?' · inferred '+Math.round(FreezerFlowLogic.sourceConfidence(i)*100)+'%':''}</div></div><div class="row">${i.inferred?`<button class="btn secondary" onclick="confirmItem(${i.id})">Still here</button>`:''}<button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div></div>`).join(''):'<p class="muted">No inventory yet.</p>';
   const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
-  useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
+  useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${i.inferred?'confirmation required · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
 }
 function rejectReason(i){return FreezerFlowLogic.rejectReason(i,state.profile)}
 function safety(i){return FreezerFlowLogic.safety(i)}
