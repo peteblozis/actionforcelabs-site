@@ -27,19 +27,36 @@
   function executionFit(item,profile){
     return !!(profile && Array.isArray(profile.methods) && profile.methods.includes(item.method));
   }
+  function healthFit(item){
+    return item.healthConfirmed===true && Number.isFinite(Number(item.health))
+      ? Math.max(0,Math.min(100,Number(item.health)))
+      : 50;
+  }
+  function avoidTerms(profile){
+    const raw=Array.isArray(profile&&profile.avoidTerms)?profile.avoidTerms:(profile&&profile.avoidTerms?String(profile.avoidTerms).split(','):[]);
+    return raw.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
+  }
+  function avoidedByProfile(item,profile){
+    const terms=avoidTerms(profile);
+    if(!terms.length)return '';
+    const haystack=[item.name,item.preferenceTags].filter(Boolean).join(' ').toLowerCase();
+    return terms.find(term=>haystack.includes(term))||'';
+  }
   function priority(item,profile){
     const waste=item.age===2?100:item.age===1?70:35;
     const exec=executionFit(item,profile)?100:0;
     const complete=item.role==='complete'?100:(item.role==='protein'||item.role==='side'?75:55);
     const openedUrg=item.leftover?100:item.opened?90:35;
-    const preference=Number.isFinite(item.preference)?item.preference:70;
-    const health=Number.isFinite(item.health)?item.health:70;
+    const preference=Number.isFinite(item.preference)?item.preference:50;
+    const health=healthFit(item);
     return Math.round(.30*waste+.20*exec+.15*complete+.15*openedUrg+.10*preference+.10*health);
   }
   function rejectReason(item,profile){
     if(!profile)return 'LifeFit profile not saved';
     if(!positiveQuantity(item))return 'has no confirmed positive quantity';
     if(!inventoryTrusted(item))return 'inventory fact needs confirmation before it can drive a meal decision';
+    const avoided=avoidedByProfile(item,profile);
+    if(avoided)return 'matches saved food-avoid preference: '+avoided;
     if(!executionFit(item,profile))return 'requires '+item.method+', which is not allowed';
     if(!confirmedRequirements(item))return 'has unconfirmed skill, effort, or cleanup requirements';
     if(Number(item.skill)>Number(profile.skill))return 'requires more kitchen skill than the saved LifeFit limit';
@@ -125,9 +142,10 @@
       inferred:false,
       sourceConfidence:1,
       lastConfirmedAt:new Date().toISOString(),
-      preference:Number.isFinite(options.preference)?options.preference:70,
-      health:Number.isFinite(options.health)?options.health:70
+      preference:Number.isFinite(options.preference)?options.preference:50,
+      health:options.healthConfirmed===true && Number.isFinite(options.health)?Number(options.health):null,
+      healthConfirmed:options.healthConfirmed===true
     };
   }
-  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,shoppingGaps,classifyMeal,chooseRecommendation,preparationCapacity,consumeItems,reconcileItem,createLeftover};
+  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,healthFit,avoidTerms,avoidedByProfile,executionFit,priority,rejectReason,safety,shoppingGaps,classifyMeal,chooseRecommendation,preparationCapacity,consumeItems,reconcileItem,createLeftover};
 });
