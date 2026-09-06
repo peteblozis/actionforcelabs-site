@@ -30,6 +30,7 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
 <main class="wrap">
   <h1>FreezerFlow LifeFit</h1>
   <p class="sub"><strong>Personal Kitchen Decision System.</strong> This tester slice proves the product spine: LifeFit hard filters → inventory truth → use-first rotation → one Best Next Meal → Cook Mode → feedback.</p>
+  <p class="small" id="buildId">Build identity: loading…</p>
   <div class="row">
     <button class="btn secondary" id="spaceBtn" onclick="toggleSpace()">Large / spacious view</button>
     <button class="btn secondary" onclick="loadDemo()">Load neutral demo</button>
@@ -217,6 +218,10 @@ function toggleSpace(){document.body.classList.toggle('spacious');localStorage.s
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
 if(localStorage.getItem('ff_space')==='1')document.body.classList.add('spacious');
 applyProfile();render();
+fetch('/tester/freezerflow-lifefit/build-meta.json',{cache:'no-store'})
+  .then(r=>r.ok?r.json():Promise.reject(new Error('build metadata unavailable')))
+  .then(m=>{buildId.textContent='Build identity: '+(m.source_sha||'unknown')+' · '+(m.stage||'unknown');})
+  .catch(()=>{buildId.textContent='Build identity: unavailable';});
 </script>
 </body>
 </html>
