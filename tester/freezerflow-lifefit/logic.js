@@ -76,8 +76,18 @@
     const score=Math.round(used.reduce((sum,i)=>sum+priority(i,profile),0)/used.length);
     return {status:'OK',main,side,used,score,mealClass:classifyMeal(main,side),shoppingGaps:shoppingGaps(main,side),portions:householdSize(profile)};
   }
-  function consumeItems(items,ids,profile){
-    const amount=householdSize(profile);
+  function preparationCapacity(items,ids){
+    const selected=new Set(ids);
+    const quantities=items.filter(i=>selected.has(i.id)).map(i=>Number(i.servings)).filter(Number.isFinite);
+    if(!quantities.length)return 0;
+    return Math.max(0,Math.floor(Math.min(...quantities)));
+  }
+  function consumeItems(items,ids,profile,amountOverride){
+    const fallback=householdSize(profile);
+    const requested=Number(amountOverride);
+    const amount=Number.isFinite(requested)&&requested>0?requested:fallback;
+    const capacity=preparationCapacity(items,ids);
+    if(capacity<amount)throw new Error('Prepared portions exceed confirmed inventory capacity');
     const selected=new Set(ids);
     return items.map(i=>selected.has(i.id)?{...i,servings:Math.max(0,Number(i.servings)-amount),preference:Math.min(100,(Number.isFinite(i.preference)?i.preference:70)+5)}:i).filter(i=>i.servings>0);
   }
@@ -119,5 +129,5 @@
       health:Number.isFinite(options.health)?options.health:70
     };
   }
-  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,shoppingGaps,classifyMeal,chooseRecommendation,consumeItems,reconcileItem,createLeftover};
+  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,shoppingGaps,classifyMeal,chooseRecommendation,preparationCapacity,consumeItems,reconcileItem,createLeftover};
 });
