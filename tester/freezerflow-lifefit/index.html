@@ -12,7 +12,7 @@
 .wrap{max-width:980px;margin:auto;padding:22px 16px 70px}h1{font-size:clamp(2rem,7vw,3.4rem);line-height:1.05;margin:.2em 0}.sub{color:var(--muted);max-width:780px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:12px 16px;border-radius:999px;cursor:pointer}.tabs button.active{background:var(--blue);color:#07111e;border-color:var(--blue);font-weight:700}
 .panel{display:none}.panel.active{display:block}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #566078;background:#0f131c;color:var(--text)}
+label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #566078;background:#0f131c;color:var(--text)}textarea{min-height:130px;resize:vertical}
 .checks{display:flex;flex-wrap:wrap;gap:9px}.check{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}.check input{width:auto}
 .btn{border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:#08111c;font-weight:700;cursor:pointer}.btn.secondary{background:#30384b;color:var(--text)}.btn.danger{background:#4b2930;color:#ffd9dd}.btn:focus{outline:3px solid white;outline-offset:2px}
 .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#283044;color:#dce5f5;font-size:.82rem}.pill.use{background:#5a4316;color:#ffe2a1}.pill.open{background:#153f31;color:#baf4d8}.score{font-size:2.2rem;font-weight:800;color:var(--green)}
@@ -96,6 +96,15 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
       <p class="small">Counts and servings are first-class. “Use soon” is a confirmed user state in this MVP; future versions may infer dates but must show confidence and allow one-tap correction.</p>
       <div id="inventoryList"></div>
     </div>
+    <div class="card">
+      <h2>Backup / Restore</h2>
+      <p class="small">Create a portable JSON backup of this local tester profile, inventory, feedback, and Quick Meals. Restore only a backup you trust.</p>
+      <textarea id="backupData" aria-label="FreezerFlow backup data" placeholder="Backup data appears here"></textarea>
+      <div class="row">
+        <button class="btn secondary" onclick="createBackup()">Create backup</button>
+        <button class="btn secondary" onclick="restoreBackup()">Restore backup</button>
+      </div>
+    </div>
   </section>
 
   <section id="decision" class="panel">
@@ -114,6 +123,9 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
     <div class="card">
       <h2>Quick Meal Library</h2>
       <p class="muted">Reusable meal templates belong to the individual profile. Brand-specific or personal favorites can be added by the user; the commercial engine stays configurable.</p>
+      <h3>Your saved Quick Meals</h3>
+      <div id="quickMealList"></div>
+      <h3 style="margin-top:22px">Starter ideas</h3>
       <div class="grid3">
         <div class="template"><h3>Protein yogurt bowl</h3><p>No-cook · 3–5 min</p><p class="small">Yogurt + chia + fruit. Optional protein drink for more staying power.</p></div>
         <div class="template"><h3>Microwave egg bites</h3><p>Microwave · ~1–2 min</p><p class="small">Use package directions, check the center, then rest briefly. Pair with produce or another protein as the profile calls for.</p></div>
@@ -128,9 +140,11 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
 <script src="/tester/freezerflow-lifefit/logic.js"></script>
 <script>
 const KEY='freezerflow_lifefit_mvp_v1';
-const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"processedTokens":[],"lastAction":null}');
+const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"quickMeals":[],"processedTokens":[],"lastAction":null}');
 if(!Array.isArray(state.feedback))state.feedback=[];
+if(!Array.isArray(state.quickMeals))state.quickMeals=[];
 if(!Array.isArray(state.processedTokens))state.processedTokens=[];
+let currentRecommendation=null;
 if(!Object.prototype.hasOwnProperty.call(state,'lastAction'))state.lastAction=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
@@ -157,6 +171,7 @@ function render(){
   inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''} ${i.inferred?'<span class="pill use">NEEDS CONFIRMATION</span>':''}<div class="small">${i.servings} serving(s) · ${esc(i.role)} · ${esc(i.method)} · skill ${i.skill??"?"}/effort ${i.effort??"?"}/cleanup ${i.cleanup??"?"} · Use Priority ${priority(i)}/100${i.inferred?' · inferred '+Math.round(FreezerFlowLogic.sourceConfidence(i)*100)+'%':''}</div></div><div class="row">${i.inferred?`<button class="btn secondary" onclick="confirmItem(${i.id})">Still here</button>`:''}<button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div></div>`).join(''):'<p class="muted">No inventory yet.</p>';
   const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
   useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${i.inferred?'confirmation required · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
+  quickMealList.innerHTML=state.quickMeals.length?state.quickMeals.map(q=>`<div class="item"><div><strong>${esc(q.name)}</strong><div class="small">${q.items.map(esc).join(' + ')}${q.shoppingGaps&&q.shoppingGaps.length?' · Top-off: '+q.shoppingGaps.map(esc).join(', '):''}</div></div><button class="btn danger" onclick="removeQuickMeal('${q.id}')">Remove</button></div>`).join(''):'<p class="muted">No saved Quick Meals yet. Save a meal after FreezerFlow recommends one you want to repeat.</p>';
 }
 function rejectReason(i){return FreezerFlowLogic.rejectReason(i,state.profile)}
 function safety(i){return FreezerFlowLogic.safety(i)}
@@ -178,7 +193,10 @@ function recommend(){
   const why=[main.opened||main.leftover?'uses an opened/leftover item':null,main.age===2?'uses a confirmed use-soon item':null,'fits allowed '+main.method+' execution',side?'completes the meal with a side already on hand':'uses the strongest eligible item'].filter(Boolean).join('; ');
   const token=used.map(i=>i.id+':'+i.servings).join('|')+'@'+result.portions;
   const undo=state.lastAction?'<button class="btn secondary" onclick="undoMeal()">Undo last update</button>':'';
-  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) per selected item.</p><p><strong>Shopping:</strong> ${result.mealClass==='MAKE NOW'?'MAKE NOW — no shopping required.':'ALMOST THERE — add one simple vegetable/side if available.'}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button>${undo}</div>`;
+  const gaps=result.shoppingGaps||[];
+  const shopping=result.mealClass==='MAKE NOW'?'MAKE NOW — no shopping required.':'ALMOST THERE — '+gaps.join(', ')+'.';
+  currentRecommendation={name:meal,items:used.map(i=>i.name),shoppingGaps:gaps,mealClass:result.mealClass};
+  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) per selected item.</p><p><strong>Shopping:</strong> ${esc(shopping)}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button><button class="btn secondary" onclick="saveQuickMeal()">Save to Quick Meals</button>${undo}</div>`;
 }
 function finishMeal(ids,liked,token){
   if(state.processedTokens.includes(token))return;
@@ -197,6 +215,35 @@ function undoMeal(){
   state.processedTokens=state.processedTokens.filter(x=>x!==token);
   state.lastAction=null;
   persist();render();recommend();
+}
+function saveQuickMeal(){
+  if(!currentRecommendation)return;
+  const key=currentRecommendation.name.toLowerCase();
+  if(state.quickMeals.some(q=>q.name.toLowerCase()===key))return;
+  state.quickMeals.push({id:String(Date.now()),...currentRecommendation,addedAt:new Date().toISOString()});
+  persist();render();
+}
+function removeQuickMeal(id){
+  state.quickMeals=state.quickMeals.filter(q=>q.id!==id);
+  persist();render();
+}
+function createBackup(){
+  backupData.value=JSON.stringify({version:1,profile:state.profile,items:state.items,feedback:state.feedback,quickMeals:state.quickMeals},null,2);
+}
+function restoreBackup(){
+  try{
+    const data=JSON.parse(backupData.value);
+    if(!data||data.version!==1||!Array.isArray(data.items)||!Array.isArray(data.quickMeals||[]))throw new Error('Unsupported backup');
+    state.profile=data.profile||null;
+    state.items=data.items;
+    state.feedback=Array.isArray(data.feedback)?data.feedback:[];
+    state.quickMeals=Array.isArray(data.quickMeals)?data.quickMeals:[];
+    state.processedTokens=[];
+    state.lastAction=null;
+    persist();applyProfile();render();
+  }catch(e){
+    alert('That FreezerFlow backup could not be restored.');
+  }
 }
 function loadDemo(){
  state.profile={methods:['no-cook','microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'};
