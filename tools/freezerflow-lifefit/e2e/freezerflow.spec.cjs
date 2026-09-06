@@ -184,13 +184,13 @@ test('WCAG automated scan has no serious or critical A/AA violations', async ({ 
 
 test('visible interactive targets meet the WCAG 2.2 minimum target size', async ({ page }) => {
   await openApp(page);
-  const targets = page.locator('button:visible,input:visible,select:visible,textarea:visible');
+  const targets = page.locator('button:visible,input:not([type="checkbox"]):visible,select:visible,textarea:visible,.check:visible');
   const count = await targets.count();
   for(let i=0;i<count;i++){
     const box = await targets.nth(i).boundingBox();
-    expect(box, 'visible control should have a bounding box').not.toBeNull();
-    expect(box.width, 'control width should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
-    expect(box.height, 'control height should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+    expect(box, 'visible pointer target should have a bounding box').not.toBeNull();
+    expect(box.width, 'pointer target width should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+    expect(box.height, 'pointer target height should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
   }
 });
 
