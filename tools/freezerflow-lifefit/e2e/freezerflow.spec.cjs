@@ -204,3 +204,32 @@ test('mobile and spacious modes do not create horizontal scrolling', async ({ pa
   expect(spacious.scroll).toBeLessThanOrEqual(spacious.client);
 });
 
+test('user food-avoid preferences hard-filter matching inventory without inventing nutrition data', async ({ page }) => {
+  await openApp(page);
+  await page.getByLabel('Foods I do not want suggested').fill('mushroom');
+  await page.getByRole('button', { name: 'Save LifeFit profile' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Mushroom ravioli');
+  await page.getByLabel('Meal role').selectOption('complete');
+  await page.getByLabel('Best simple method').selectOption('microwave');
+  await page.getByRole('button', { name: 'Add item' }).click();
+
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('freezerflow_lifefit_mvp_v1')));
+  expect(stored.items[0].healthConfirmed).toBe(false);
+  expect(stored.items[0].health).toBeNull();
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('No eligible meal');
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Salmon fillet');
+  await page.getByLabel('Best simple method').selectOption('air-fryer');
+  await page.getByRole('button', { name: 'Add item' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('Salmon fillet');
+  await expect(page.locator('#decisionCard')).not.toContainText('Mushroom ravioli');
+});
+
