@@ -195,16 +195,30 @@ function recommend(){
   const undo=state.lastAction?'<button class="btn secondary" onclick="undoMeal()">Undo last update</button>':'';
   const gaps=result.shoppingGaps||[];
   const shopping=result.mealClass==='MAKE NOW'?'MAKE NOW — no shopping required.':'ALMOST THERE — '+gaps.join(', ')+'.';
+  const capacity=FreezerFlowLogic.preparationCapacity(state.items,used.map(i=>i.id));
+  const maxPrep=used.some(i=>i.leftover)?result.portions:Math.max(result.portions,Math.min(capacity,result.portions+3));
+  const prepOptions=Array.from({length:maxPrep-result.portions+1},(_,n)=>result.portions+n).map(n=>`<option value="${n}">${n}${n===result.portions?' — eat now':' — eat '+result.portions+', save '+(n-result.portions)}</option>`).join('');
   currentRecommendation={name:meal,items:used.map(i=>i.name),shoppingGaps:gaps,mealClass:result.mealClass};
-  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) per selected item.</p><p><strong>Shopping:</strong> ${esc(shopping)}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button><button class="btn secondary" onclick="saveQuickMeal()">Save to Quick Meals</button>${undo}</div>`;
+  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) to eat now.</p><p><strong>Shopping:</strong> ${esc(shopping)}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<label for="cookPortions"><strong>Prepare portions</strong></label><select id="cookPortions">${prepOptions}</select><p class="small">Extra prepared portions are saved automatically as leftovers and the ingredients are deducted by the amount actually prepared.</p><p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button><button class="btn secondary" onclick="saveQuickMeal()">Save to Quick Meals</button>${undo}</div>`;
 }
 function finishMeal(ids,liked,token){
-  if(state.processedTokens.includes(token))return;
-  state.lastAction={token,items:JSON.parse(JSON.stringify(state.items))};
-  state.processedTokens.push(token);
-  state.feedback.push({at:new Date().toISOString(),ids,liked,token,portions:FreezerFlowLogic.householdSize(state.profile)});
-  if(liked){state.items=FreezerFlowLogic.consumeItems(state.items,ids,state.profile)}
-  else{state.items=state.items.map(i=>ids.includes(i.id)?{...i,preference:Math.max(0,(Number.isFinite(i.preference)?i.preference:70)-20)}:i)}
+  const household=FreezerFlowLogic.householdSize(state.profile);
+  const prepared=Number(document.getElementById('cookPortions')?.value)||household;
+  const finalToken=token+':p'+prepared;
+  if(state.processedTokens.includes(finalToken))return;
+  const usedBefore=state.items.filter(i=>ids.includes(i.id));
+  state.lastAction={token:finalToken,items:JSON.parse(JSON.stringify(state.items))};
+  state.processedTokens.push(finalToken);
+  const leftoverServings=liked&&!usedBefore.some(i=>i.leftover)?Math.max(0,prepared-household):0;
+  state.feedback.push({at:new Date().toISOString(),ids,liked,token:finalToken,portions:household,preparedPortions:prepared,leftoverServingsCreated:leftoverServings});
+  if(liked){
+    state.items=FreezerFlowLogic.consumeItems(state.items,ids,state.profile,prepared);
+    if(leftoverServings>0){
+      state.items.push(FreezerFlowLogic.createLeftover(currentRecommendation?.name||'Meal',leftoverServings,{id:Date.now()+1}));
+    }
+  } else {
+    state.items=state.items.map(i=>ids.includes(i.id)?{...i,preference:Math.max(0,(Number.isFinite(i.preference)?i.preference:70)-20)}:i);
+  }
   persist();render();recommend();
 }
 function undoMeal(){
