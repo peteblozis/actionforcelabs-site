@@ -1,0 +1,11 @@
+{
+  "name": "freezerflow-lifefit-browser-contract",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  },
+  "scripts": {
+    "test:e2e": "playwright test"
+  }
+}
