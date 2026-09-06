@@ -50,6 +50,10 @@ const consumed=L.consumeItems(familyItems,[1,2],family);
 assert.equal(consumed.length,0,'family completion consumes four confirmed portions from every used item');
 const partial=L.consumeItems([item({servings:5})],[1],family);
 assert.equal(partial[0].servings,1,'consumption deducts actual household quantity');
+assert.equal(L.preparationCapacity([item({servings:5}),item({id:2,role:'side',method:'microwave',servings:3,skill:1,effort:1,cleanup:1})],[1,2]),3,'prep capacity is limited by the smallest confirmed ingredient quantity');
+const batch=L.consumeItems([item({servings:5})],[1],profile,3);
+assert.equal(batch[0].servings,2,'explicit prepared portions deduct the actual cooked amount');
+assert.throws(()=>L.consumeItems([item({servings:2})],[1],profile,3),/exceed confirmed inventory/,'cannot create extra prepared portions beyond inventory capacity');
 
 assert.match(L.safety(leftover),/165°F/,'leftovers must carry 165°F reheat target');
 assert.match(L.safety(salmon),/145°F/,'raw fish must carry 145°F target');
