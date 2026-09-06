@@ -31,6 +31,10 @@ assert.match(L.rejectReason(item({skill:3}),profile),/skill/,'skill limit must b
 assert.match(L.rejectReason(item({effort:3}),profile),/effort/,'effort limit must be enforced');
 assert.match(L.rejectReason(item({cleanup:3}),profile),/cleanup/,'cleanup limit must be enforced');
 assert.match(L.rejectReason(item({skill:undefined}),profile),/unconfirmed/,'unknown execution requirements must fail closed');
+assert.equal(L.inventoryTrusted(item({inferred:false})),true,'manual/confirmed inventory should remain trusted');
+assert.equal(L.inventoryTrusted(item({inferred:true,sourceConfidence:.5})),false,'low-confidence inferred inventory must not drive a recommendation');
+assert.match(L.rejectReason(item({inferred:true,sourceConfidence:.5}),profile),/confirmation/,'uncertain inferred inventory must fail closed');
+assert.equal(L.inventoryTrusted(item({inferred:true,sourceConfidence:.8})),true,'high-confidence inferred inventory may remain eligible');
 
 const family={...profile,household:4};
 const familyItems=[item({servings:4}),item({id:2,name:'Broccoli',role:'side',method:'microwave',servings:4,skill:1,effort:1,cleanup:1})];
@@ -42,5 +46,20 @@ assert.equal(partial[0].servings,1,'consumption deducts actual household quantit
 assert.match(L.safety(leftover),/165°F/,'leftovers must carry 165°F reheat target');
 assert.match(L.safety(salmon),/145°F/,'raw fish must carry 145°F target');
 assert.match(L.safety(stuffed),/165°F/,'stuffed seafood must carry 165°F center target');
+
+const inferred=item({inferred:true,sourceConfidence:.4});
+const confirmed=L.reconcileItem(inferred,'STILL_HERE');
+assert.equal(confirmed.inferred,false,'one-tap confirmation must convert inferred stock to confirmed');
+assert.equal(confirmed.sourceConfidence,1,'confirmed stock should have full source confidence');
+assert.equal(L.reconcileItem(item(),'USED'),null,'USED reconcile action removes inventory');
+assert.equal(L.reconcileItem(item(),'SERVINGS_LEFT',2.5).servings,2.5,'servings-left correction must preserve practical fractional quantities');
+assert.throws(()=>L.reconcileItem(item(),'SERVINGS_LEFT',0),/positive quantity/,'invalid reconcile quantity must fail closed');
+
+const leftovers=L.createLeftover('Salmon dinner',2,{id:99});
+assert.equal(leftovers.leftover,true,'created leftover must be first-class leftover inventory');
+assert.equal(leftovers.opened,true,'created leftover must be treated as opened');
+assert.equal(leftovers.loc,'Fridge','created leftover defaults to fridge');
+assert.equal(leftovers.servings,2,'created leftover preserves confirmed servings');
+assert.match(L.safety(leftovers),/165°F/,'created leftovers inherit the reheat safety rule');
 
 console.log('FREEZERFLOW MVP LOGIC TESTS PASSED');
