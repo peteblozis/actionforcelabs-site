@@ -15,6 +15,15 @@
       Number.isFinite(Number(item.effort)) &&
       Number.isFinite(Number(item.cleanup));
   }
+  function sourceConfidence(item){
+    if(item.inferred!==true)return 1;
+    const raw=Number(item.sourceConfidence);
+    if(!Number.isFinite(raw))return 0;
+    return Math.max(0,Math.min(1,raw));
+  }
+  function inventoryTrusted(item){
+    return item.inferred!==true || sourceConfidence(item)>=0.70;
+  }
   function executionFit(item,profile){
     return !!(profile && Array.isArray(profile.methods) && profile.methods.includes(item.method));
   }
@@ -30,6 +39,7 @@
   function rejectReason(item,profile){
     if(!profile)return 'LifeFit profile not saved';
     if(!positiveQuantity(item))return 'has no confirmed positive quantity';
+    if(!inventoryTrusted(item))return 'inventory fact needs confirmation before it can drive a meal decision';
     if(!executionFit(item,profile))return 'requires '+item.method+', which is not allowed';
     if(!confirmedRequirements(item))return 'has unconfirmed skill, effort, or cleanup requirements';
     if(Number(item.skill)>Number(profile.skill))return 'requires more kitchen skill than the saved LifeFit limit';
@@ -65,5 +75,43 @@
     const selected=new Set(ids);
     return items.map(i=>selected.has(i.id)?{...i,servings:Math.max(0,Number(i.servings)-amount),preference:Math.min(100,(Number.isFinite(i.preference)?i.preference:70)+5)}:i).filter(i=>i.servings>0);
   }
-  return {positiveQuantity,householdSize,confirmedRequirements,executionFit,priority,rejectReason,safety,classifyMeal,chooseRecommendation,consumeItems};
+  function reconcileItem(item,action,value){
+    const now=new Date().toISOString();
+    if(action==='USED')return null;
+    if(action==='STILL_HERE')return {...item,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    if(action==='OPENED')return {...item,opened:true,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    if(action==='FRESH')return {...item,age:0,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    if(action==='HAD_A_WHILE')return {...item,age:1,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    if(action==='FROZEN')return {...item,loc:'Freezer',age:0,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    if(action==='SERVINGS_LEFT'){
+      const qty=Number(value);
+      if(!Number.isFinite(qty)||qty<=0)throw new Error('SERVINGS_LEFT requires a positive quantity');
+      return {...item,servings:qty,inferred:false,sourceConfidence:1,lastConfirmedAt:now};
+    }
+    throw new Error('Unknown reconcile action');
+  }
+  function createLeftover(name,servings,options={}){
+    const qty=Number(servings);
+    if(!Number.isFinite(qty)||qty<=0)throw new Error('Leftover servings must be positive');
+    return {
+      id: options.id || Date.now(),
+      name: String(name||'Meal')+' leftovers',
+      role:'complete',
+      loc:options.loc||'Fridge',
+      servings:qty,
+      method:options.method||'microwave',
+      skill:1,
+      effort:1,
+      cleanup:1,
+      age:1,
+      opened:true,
+      leftover:true,
+      inferred:false,
+      sourceConfidence:1,
+      lastConfirmedAt:new Date().toISOString(),
+      preference:Number.isFinite(options.preference)?options.preference:70,
+      health:Number.isFinite(options.health)?options.health:70
+    };
+  }
+  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,classifyMeal,chooseRecommendation,consumeItems,reconcileItem,createLeftover};
 });
