@@ -78,6 +78,9 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
         <div><label for="itemLoc">Location</label><select id="itemLoc"><option>Freezer</option><option>Fridge</option><option>Pantry</option></select></div>
         <div><label for="servings">Servings / pieces left</label><input id="servings" type="number" min=".25" step=".25" value="1"></div>
         <div><label for="itemMethod">Best simple method</label><select id="itemMethod"><option value="no-cook">No-cook</option><option value="microwave">Microwave</option><option value="air-fryer">Air fryer</option><option value="oven">Oven</option><option value="stovetop">Stovetop</option></select></div>
+        <div><label for="itemSkill">Required kitchen confidence</label><select id="itemSkill"><option value="1">Not a cook</option><option value="2" selected>Simple instructions</option><option value="3">Comfortable cook</option></select></div>
+        <div><label for="itemEffort">Required effort</label><select id="itemEffort"><option value="1">Heat & eat</option><option value="2" selected>Very simple</option><option value="3">Moderate</option></select></div>
+        <div><label for="itemCleanup">Required cleanup</label><select id="itemCleanup"><option value="1">One bowl / basket</option><option value="2" selected>Light cleanup</option><option value="3">Normal cleanup</option></select></div>
         <div><label for="age">How long has it been here?</label><select id="age"><option value="0">New / recent</option><option value="1">Had a while</option><option value="2">Use soon</option></select></div>
       </div>
       <div class="checks" style="margin-top:12px">
@@ -123,7 +126,10 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select{width:100%;pad
 <script src="/tester/freezerflow-lifefit/logic.js"></script>
 <script>
 const KEY='freezerflow_lifefit_mvp_v1';
-const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[]}');
+const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"processedTokens":[],"lastAction":null}');
+if(!Array.isArray(state.feedback))state.feedback=[];
+if(!Array.isArray(state.processedTokens))state.processedTokens=[];
+if(!Object.prototype.hasOwnProperty.call(state,'lastAction'))state.lastAction=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
 function methods(){return [...document.querySelectorAll('#applianceChecks input:checked')].map(x=>x.value)}
@@ -133,7 +139,9 @@ function saveProfile(){
 }
 function addItem(){
   const name=itemName.value.trim(); if(!name){alert('Enter an item name.');return}
-  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:+servings.value||1,method:itemMethod.value,age:+age.value,opened:opened.checked,leftover:leftover.checked,preference:70,health:70});
+  const quantity=Number(servings.value);
+  if(!Number.isFinite(quantity)||quantity<=0){alert('Enter a confirmed quantity greater than zero.');return}
+  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:quantity,method:itemMethod.value,skill:Number(itemSkill.value),effort:Number(itemEffort.value),cleanup:Number(itemCleanup.value),age:+age.value,opened:opened.checked,leftover:leftover.checked,preference:70,health:70});
   itemName.value='';opened.checked=false;leftover.checked=false;age.value='0';servings.value='1';persist();render();
 }
 function removeItem(id){state.items=state.items.filter(x=>x.id!==id);persist();render()}
@@ -146,7 +154,7 @@ function priority(i){
   return Math.round(.30*waste+.20*exec+.15*complete+.15*openedUrg+.10*i.preference+.10*i.health);
 }
 function render(){
-  inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''}<div class="small">${i.servings} serving/piece(s) · ${esc(i.role)} · ${esc(i.method)} · Use Priority ${priority(i)}/100</div></div><button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div>`).join(''):'<p class="muted">No inventory yet.</p>';
+  inventoryList.innerHTML=state.items.length?state.items.map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong> <span class="pill">${esc(i.loc)}</span> ${i.opened?'<span class="pill open">OPEN / PARTIAL</span>':''} ${i.age===2?'<span class="pill use">USE SOON</span>':''}<div class="small">${i.servings} confirmed serving(s) · ${esc(i.role)} · ${esc(i.method)} · skill ${i.skill??"?"}/effort ${i.effort??"?"}/cleanup ${i.cleanup??"?"} · Use Priority ${priority(i)}/100</div></div><button class="btn danger" onclick="removeItem(${i.id})">Remove</button></div>`).join(''):'<p class="muted">No inventory yet.</p>';
   const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
   useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
 }
@@ -168,23 +176,37 @@ function recommend(){
   const avg=result.score;
   const meal=used.map(i=>i.name).join(' + ');
   const why=[main.opened||main.leftover?'uses an opened/leftover item':null,main.age===2?'uses a confirmed use-soon item':null,'fits allowed '+main.method+' execution',side?'completes the meal with a side already on hand':'uses the strongest eligible item'].filter(Boolean).join('; ');
-  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Shopping:</strong> ${side||main.role==='complete'?'MAKE NOW — no shopping required.':'ALMOST THERE — add one simple vegetable/side if available.'}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true)">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false)">Too much work / reject</button></div>`;
+  const token=used.map(i=>i.id+':'+i.servings).join('|')+'@'+result.portions;
+  const undo=state.lastAction?'<button class="btn secondary" onclick="undoMeal()">Undo last update</button>':'';
+  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) per selected item.</p><p><strong>Shopping:</strong> ${result.mealClass==='MAKE NOW'?'MAKE NOW — no shopping required.':'ALMOST THERE — add one simple vegetable/side if available.'}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button>${undo}</div>`;
 }
-function finishMeal(ids,liked){
-  state.feedback.push({at:new Date().toISOString(),ids,liked});
-  if(liked){state.items=state.items.map(i=>ids.includes(i.id)?{...i,servings:Math.max(0,i.servings-1),preference:Math.min(100,i.preference+5)}:i).filter(i=>i.servings>0)}
-  else{state.items=state.items.map(i=>ids.includes(i.id)?{...i,preference:Math.max(0,i.preference-20)}:i)}
+function finishMeal(ids,liked,token){
+  if(state.processedTokens.includes(token))return;
+  state.lastAction={token,items:JSON.parse(JSON.stringify(state.items))};
+  state.processedTokens.push(token);
+  state.feedback.push({at:new Date().toISOString(),ids,liked,token,portions:FreezerFlowLogic.householdSize(state.profile)});
+  if(liked){state.items=FreezerFlowLogic.consumeItems(state.items,ids,state.profile)}
+  else{state.items=state.items.map(i=>ids.includes(i.id)?{...i,preference:Math.max(0,(Number.isFinite(i.preference)?i.preference:70)-20)}:i)}
+  persist();render();recommend();
+}
+function undoMeal(){
+  if(!state.lastAction)return;
+  const token=state.lastAction.token;
+  state.items=state.lastAction.items;
+  state.feedback=state.feedback.filter(x=>x.token!==token);
+  state.processedTokens=state.processedTokens.filter(x=>x!==token);
+  state.lastAction=null;
   persist();render();recommend();
 }
 function loadDemo(){
  state.profile={methods:['no-cook','microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'};
  state.items=[
- {id:101,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',age:2,opened:false,leftover:false,preference:85,health:80},
- {id:102,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',age:1,opened:true,leftover:false,preference:75,health:85},
- {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',age:1,opened:false,leftover:false,preference:80,health:80},
- {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',age:2,opened:true,leftover:true,preference:70,health:60},
- {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',age:2,opened:false,leftover:false,preference:70,health:55}
- ];persist();applyProfile();render();
+ {id:101,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:2,opened:false,leftover:false,preference:85,health:80},
+ {id:102,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:true,leftover:false,preference:75,health:85},
+ {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:80,health:80},
+ {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',skill:1,effort:1,cleanup:1,age:2,opened:true,leftover:true,preference:70,health:60},
+ {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',skill:2,effort:2,cleanup:2,age:2,opened:false,leftover:false,preference:70,health:55}
+ ];state.processedTokens=[];state.lastAction=null;persist();applyProfile();render();
 }
 function applyProfile(){
  if(!state.profile)return;
