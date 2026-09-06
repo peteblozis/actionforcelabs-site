@@ -54,6 +54,12 @@
     if(/fish|salmon|trout|cod|tilapia/i.test(item.name))return 'If raw fish, cook to at least 145°F in the thickest part.';
     return 'Follow the package or validated prep card and verify doneness before serving.';
   }
+  function shoppingGaps(main,side){
+    if(!main || main.role==='complete' || side)return [];
+    if(main.role==='breakfast')return ['fruit or simple produce add-on'];
+    if(main.role==='protein')return ['simple vegetable or salad'];
+    return ['one simple meal-completing side'];
+  }
   function classifyMeal(main,side){
     if(!main)return 'NO_ELIGIBLE';
     if(main.role==='complete'||side)return 'MAKE NOW';
@@ -68,7 +74,7 @@
     const side=eligible.find(i=>i.id!==main.id&&i.role==='side')||null;
     const used=[main].concat(side?[side]:[]);
     const score=Math.round(used.reduce((sum,i)=>sum+priority(i,profile),0)/used.length);
-    return {status:'OK',main,side,used,score,mealClass:classifyMeal(main,side),portions:householdSize(profile)};
+    return {status:'OK',main,side,used,score,mealClass:classifyMeal(main,side),shoppingGaps:shoppingGaps(main,side),portions:householdSize(profile)};
   }
   function consumeItems(items,ids,profile){
     const amount=householdSize(profile);
@@ -113,5 +119,5 @@
       health:Number.isFinite(options.health)?options.health:70
     };
   }
-  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,classifyMeal,chooseRecommendation,consumeItems,reconcileItem,createLeftover};
+  return {positiveQuantity,householdSize,confirmedRequirements,sourceConfidence,inventoryTrusted,executionFit,priority,rejectReason,safety,shoppingGaps,classifyMeal,chooseRecommendation,consumeItems,reconcileItem,createLeftover};
 });
