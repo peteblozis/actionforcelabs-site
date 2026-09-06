@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
 
 async function openApp(page) {
   await page.goto('/tester/freezerflow-lifefit/');
@@ -168,5 +169,38 @@ test('cooking extra portions deducts actual ingredients and creates only the tru
   await selectTab(page, /3 · Best Meal/);
   await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
   await expect(page.locator('#decisionCard')).toContainText('165°F');
+});
+
+test('WCAG automated scan has no serious or critical A/AA violations', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /2 · Inventory/);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'])
+    .analyze();
+  const material = results.violations.filter(v => v.impact === 'serious' || v.impact === 'critical');
+  expect(material, JSON.stringify(material, null, 2)).toEqual([]);
+});
+
+test('visible interactive targets meet the WCAG 2.2 minimum target size', async ({ page }) => {
+  await openApp(page);
+  const targets = page.locator('button:visible,input:visible,select:visible,textarea:visible');
+  const count = await targets.count();
+  for(let i=0;i<count;i++){
+    const box = await targets.nth(i).boundingBox();
+    expect(box, 'visible control should have a bounding box').not.toBeNull();
+    expect(box.width, 'control width should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+    expect(box.height, 'control height should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+  }
+});
+
+test('mobile and spacious modes do not create horizontal scrolling', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await openApp(page);
+  const normal = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(normal.scroll).toBeLessThanOrEqual(normal.client);
+  await page.getByRole('button', { name: 'Large / spacious view' }).click();
+  const spacious = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(spacious.scroll).toBeLessThanOrEqual(spacious.client);
 });
 
