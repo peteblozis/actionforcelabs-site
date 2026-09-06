@@ -54,3 +54,7 @@ jobs:
         shell: pwsh
         run: node ./tools/freezerflow-lifefit/test-mvp-logic.cjs
 
+      - name: Run FreezerFlow storage-adapter tests
+        shell: pwsh
+        run: node ./tools/freezerflow-lifefit/test-storage-adapter.cjs
+
