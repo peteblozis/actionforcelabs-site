@@ -7,9 +7,12 @@ $path=Join-Path $repoRoot $TesterPath
 if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "Missing FreezerFlow tester page"}
 $content=Get-Content -LiteralPath $path -Raw
 $logicPath=Join-Path (Split-Path -Parent $path) "logic.js"
+$storagePath=Join-Path (Split-Path -Parent $path) "storage-adapter.js"
 if(!(Test-Path -LiteralPath $logicPath -PathType Leaf)){throw "Missing FreezerFlow decision logic"}
+if(!(Test-Path -LiteralPath $storagePath -PathType Leaf)){throw "Missing FreezerFlow storage adapter"}
 $logicContent=Get-Content -LiteralPath $logicPath -Raw
-$combined=$content+[Environment]::NewLine+$logicContent
+$storageContent=Get-Content -LiteralPath $storagePath -Raw
+$combined=$content+[Environment]::NewLine+$logicContent+[Environment]::NewLine+$storageContent
 
 $required=@(
   "LifeFit Cooking Profile",
@@ -46,7 +49,11 @@ $required=@(
   "@media(max-width:720px)",
   "165°F",
   "145°F",
-  "logic.js"
+  "logic.js",
+  "storage-adapter.js",
+  "FreezerFlowStorage",
+  "createLocalStorageAdapter",
+  "freezerflow-export"
 )
 foreach($term in $required){
   if($combined.IndexOf($term,[System.StringComparison]::OrdinalIgnoreCase)-lt 0){
