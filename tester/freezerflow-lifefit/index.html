@@ -64,7 +64,9 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width
         <div><label for="household">Household mode</label><select id="household"><option value="1" selected>One person</option><option value="2">Two people</option><option value="4">Family</option></select></div>
         <div><label for="lifeMode">Life mode</label><select id="lifeMode"><option>Solo routine</option><option>Senior simple-living</option><option>Rebuilding routine</option><option>Couple / household</option><option>Family routine</option></select></div>
         <div><label for="goal">Meal emphasis</label><select id="goal"><option value="balanced">Balanced</option><option value="protein">Higher protein</option><option value="produce">More vegetables / produce</option><option value="lower-sodium">Lower sodium</option></select></div>
+        <div><label for="avoidTerms">Foods I do not want suggested</label><input id="avoidTerms" placeholder="e.g., mushrooms, olives"></div>
       </div>
+      <p class="small">Food-avoid terms are a preference filter, not an allergy detector. For allergies, always verify the product label and ingredients.</p>
       <button class="btn" onclick="saveProfile()">Save LifeFit profile</button>
       <span id="profileSaved" class="small"></span>
     </div>
@@ -76,6 +78,7 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width
       <div class="grid">
         <div><label for="itemName">Item name</label><input id="itemName" placeholder="e.g., salmon fillet"></div>
         <div><label for="itemRole">Meal role</label><select id="itemRole"><option value="protein">Protein</option><option value="side">Side / vegetable</option><option value="complete">Complete meal</option><option value="breakfast">Breakfast / quick meal</option><option value="other">Other</option></select></div>
+        <div><label for="preferenceTags">Optional food / ingredient tags</label><input id="preferenceTags" placeholder="e.g., contains mushroom"></div>
         <div><label for="itemLoc">Location</label><select id="itemLoc"><option>Freezer</option><option>Fridge</option><option>Pantry</option></select></div>
         <div><label for="servings">Servings / pieces left</label><input id="servings" type="number" min=".25" step=".25" value="1"></div>
         <div><label for="itemMethod">Best simple method</label><select id="itemMethod"><option value="no-cook">No-cook</option><option value="microwave">Microwave</option><option value="air-fryer">Air fryer</option><option value="oven">Oven</option><option value="stovetop">Stovetop</option></select></div>
@@ -150,15 +153,15 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
 function methods(){return [...document.querySelectorAll('#applianceChecks input:checked')].map(x=>x.value)}
 function saveProfile(){
-  state.profile={methods:methods(),skill:+skill.value,effort:+effort.value,cleanup:+cleanup.value,household:+household.value,lifeMode:lifeMode.value,goal:goal.value};
+  state.profile={methods:methods(),skill:+skill.value,effort:+effort.value,cleanup:+cleanup.value,household:+household.value,lifeMode:lifeMode.value,goal:goal.value,avoidTerms:avoidTerms.value.split(',').map(x=>x.trim()).filter(Boolean)};
   persist(); profileSaved.textContent=' Saved locally in this browser.'; render();
 }
 function addItem(){
   const name=itemName.value.trim(); if(!name){alert('Enter an item name.');return}
   const quantity=Number(servings.value);
   if(!Number.isFinite(quantity)||quantity<=0){alert('Enter a confirmed quantity greater than zero.');return}
-  state.items.push({id:Date.now(),name,role:itemRole.value,loc:itemLoc.value,servings:quantity,method:itemMethod.value,skill:Number(itemSkill.value),effort:Number(itemEffort.value),cleanup:Number(itemCleanup.value),age:+age.value,opened:opened.checked,leftover:leftover.checked,inferred:inferred.checked,sourceConfidence:inferred.checked?0.5:1,lastConfirmedAt:inferred.checked?null:new Date().toISOString(),preference:70,health:70});
-  itemName.value='';opened.checked=false;leftover.checked=false;inferred.checked=false;age.value='0';servings.value='1';persist();render();
+  state.items.push({id:Date.now(),name,role:itemRole.value,preferenceTags:preferenceTags.value.trim(),loc:itemLoc.value,servings:quantity,method:itemMethod.value,skill:Number(itemSkill.value),effort:Number(itemEffort.value),cleanup:Number(itemCleanup.value),age:+age.value,opened:opened.checked,leftover:leftover.checked,inferred:inferred.checked,sourceConfidence:inferred.checked?0.5:1,lastConfirmedAt:inferred.checked?null:new Date().toISOString(),preference:50,health:null,healthConfirmed:false});
+  itemName.value='';preferenceTags.value='';opened.checked=false;leftover.checked=false;inferred.checked=false;age.value='0';servings.value='1';persist();render();
 }
 function removeItem(id){state.items=state.items.filter(x=>x.id!==id);persist();render()}
 function confirmItem(id){
@@ -260,19 +263,19 @@ function restoreBackup(){
   }
 }
 function loadDemo(){
- state.profile={methods:['no-cook','microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'};
+ state.profile={methods:['no-cook','microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced',avoidTerms:[]};
  state.items=[
- {id:101,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:2,opened:false,leftover:false,preference:85,health:80},
- {id:102,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:true,leftover:false,preference:75,health:85},
- {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:80,health:80},
- {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',skill:1,effort:1,cleanup:1,age:2,opened:true,leftover:true,preference:70,health:60},
- {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',skill:2,effort:2,cleanup:2,age:2,opened:false,leftover:false,preference:70,health:55}
+ {id:101,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:2,opened:false,leftover:false,preference:85,health:null,healthConfirmed:false},
+ {id:102,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:true,leftover:false,preference:75,health:null,healthConfirmed:false},
+ {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:80,health:null,healthConfirmed:false},
+ {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',skill:1,effort:1,cleanup:1,age:2,opened:true,leftover:true,preference:70,health:null,healthConfirmed:false},
+ {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',skill:2,effort:2,cleanup:2,age:2,opened:false,leftover:false,preference:70,health:null,healthConfirmed:false}
  ];state.processedTokens=[];state.lastAction=null;persist();applyProfile();render();
 }
 function applyProfile(){
  if(!state.profile)return;
  document.querySelectorAll('#applianceChecks input').forEach(x=>x.checked=state.profile.methods.includes(x.value));
- skill.value=state.profile.skill;effort.value=state.profile.effort;cleanup.value=state.profile.cleanup;household.value=state.profile.household;lifeMode.value=state.profile.lifeMode;goal.value=state.profile.goal;
+ skill.value=state.profile.skill;effort.value=state.profile.effort;cleanup.value=state.profile.cleanup;household.value=state.profile.household;lifeMode.value=state.profile.lifeMode;goal.value=state.profile.goal;avoidTerms.value=Array.isArray(state.profile.avoidTerms)?state.profile.avoidTerms.join(', '):'';
 }
 function resetAll(){if(confirm('Clear this browser-only demo?')){localStorage.removeItem(KEY);location.reload()}}
 function toggleSpace(){document.body.classList.toggle('spacious');localStorage.setItem('ff_space',document.body.classList.contains('spacious')?'1':'0')}
