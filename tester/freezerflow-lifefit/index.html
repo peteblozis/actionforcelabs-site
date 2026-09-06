@@ -42,6 +42,7 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width
     <button data-tab="inventory">2 · Inventory</button>
     <button data-tab="decision">3 · Best Meal</button>
     <button data-tab="quick">4 · Quick Meals</button>
+    <button data-tab="shopping">5 · Shopping</button>
   </nav>
 
   <section id="profile" class="panel active">
@@ -139,13 +140,23 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width
       </div>
     </div>
   </section>
+
+  <section id="shopping" class="panel">
+    <div class="card">
+      <h2>Top-Off Shopping</h2>
+      <p class="muted">Eat first, shop second. This list only holds specific gaps from a FreezerFlow recommendation; it does not add food you already have as a usable meal component.</p>
+      <div id="shoppingList"></div>
+      <button class="btn danger" onclick="clearShoppingList()">Clear Top-Off List</button>
+    </div>
+  </section>
 </main>
 <script src="/tester/freezerflow-lifefit/logic.js"></script>
 <script>
 const KEY='freezerflow_lifefit_mvp_v1';
-const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"quickMeals":[],"processedTokens":[],"lastAction":null}');
+const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"quickMeals":[],"shoppingList":[],"processedTokens":[],"lastAction":null}');
 if(!Array.isArray(state.feedback))state.feedback=[];
 if(!Array.isArray(state.quickMeals))state.quickMeals=[];
+if(!Array.isArray(state.shoppingList))state.shoppingList=[];
 if(!Array.isArray(state.processedTokens))state.processedTokens=[];
 let currentRecommendation=null;
 if(!Object.prototype.hasOwnProperty.call(state,'lastAction'))state.lastAction=null;
@@ -175,6 +186,7 @@ function render(){
   const sorted=[...state.items].sort((a,b)=>priority(b)-priority(a));
   useFirst.innerHTML=sorted.length?sorted.slice(0,5).map(i=>`<div class="item"><div><strong>${esc(i.name)}</strong><div class="small">Use Priority ${priority(i)}/100 · ${i.opened?'opened/partial · ':''}${i.age===2?'use soon · ':''}${i.inferred?'confirmation required · ':''}${executionFit(i)===100?'LifeFit-compatible':'method blocked by LifeFit'}</div></div><div class="score">${priority(i)}</div></div>`).join(''):'<p class="muted">No items ranked yet.</p>';
   quickMealList.innerHTML=state.quickMeals.length?state.quickMeals.map(q=>`<div class="item"><div><strong>${esc(q.name)}</strong><div class="small">${q.items.map(esc).join(' + ')}${q.shoppingGaps&&q.shoppingGaps.length?' · Top-off: '+q.shoppingGaps.map(esc).join(', '):''}</div></div><button class="btn danger" onclick="removeQuickMeal('${q.id}')">Remove</button></div>`).join(''):'<p class="muted">No saved Quick Meals yet. Save a meal after FreezerFlow recommends one you want to repeat.</p>';
+  shoppingList.innerHTML=state.shoppingList.length?state.shoppingList.map(s=>`<div class="item"><div><strong>${esc(s.text)}</strong><div class="small">Top-off for: ${esc(s.sourceMeal||'meal')}</div></div><button class="btn danger" onclick="removeShoppingItem('${s.id}')">Remove</button></div>`).join(''):'<p class="muted">No shopping needed from the current saved decisions.</p>';
 }
 function rejectReason(i){return FreezerFlowLogic.rejectReason(i,state.profile)}
 function safety(i){return FreezerFlowLogic.safety(i)}
@@ -202,7 +214,8 @@ function recommend(){
   const maxPrep=used.some(i=>i.leftover)?result.portions:Math.max(result.portions,Math.min(capacity,result.portions+3));
   const prepOptions=Array.from({length:maxPrep-result.portions+1},(_,n)=>result.portions+n).map(n=>`<option value="${n}">${n}${n===result.portions?' — eat now':' — eat '+result.portions+', save '+(n-result.portions)}</option>`).join('');
   currentRecommendation={name:meal,items:used.map(i=>i.name),shoppingGaps:gaps,mealClass:result.mealClass};
-  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) to eat now.</p><p><strong>Shopping:</strong> ${esc(shopping)}</p><h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<label for="cookPortions"><strong>Prepare portions</strong></label><select id="cookPortions">${prepOptions}</select><p class="small">Extra prepared portions are saved automatically as leftovers and the ingredients are deducted by the amount actually prepared.</p><p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button><button class="btn secondary" onclick="saveQuickMeal()">Save to Quick Meals</button>${undo}</div>`;
+  const topOffButton=gaps.length?'<button class="btn secondary" onclick="addShoppingGaps()">Add gap to Top-Off List</button>':'';
+  decisionCard.innerHTML=`<div class="score">${avg}/100 decision fit</div><h3>${esc(meal)}</h3><div class="reason"><strong>Why this wins now:</strong> ${esc(why)}.</div><p><strong>Household quantity:</strong> ${result.portions} confirmed portion(s) to eat now.</p><p><strong>Shopping:</strong> ${esc(shopping)}</p>${topOffButton}<h3>Cook Mode</h3>${used.map(i=>`<div class="step"><strong>${esc(i.name)}:</strong> ${esc(prep(i))} <strong>Safety:</strong> ${esc(safety(i))}</div>`).join('')}<label for="cookPortions"><strong>Prepare portions</strong></label><select id="cookPortions">${prepOptions}</select><p class="small">Extra prepared portions are saved automatically as leftovers and the ingredients are deducted by the amount actually prepared.</p><p class="notice"><strong>Important:</strong> Exact package-specific time/temperature belongs in the saved prep card. This demo does not invent missing label instructions.</p><div class="row"><button class="btn" onclick="finishMeal([${used.map(i=>i.id).join(',')}],true,'${token}')">Ate it / liked it</button><button class="btn secondary" onclick="finishMeal([${used.map(i=>i.id).join(',')}],false,'${token}')">Too much work / reject</button><button class="btn secondary" onclick="saveQuickMeal()">Save to Quick Meals</button>${undo}</div>`;
 }
 function finishMeal(ids,liked,token){
   const household=FreezerFlowLogic.householdSize(state.profile);
@@ -244,8 +257,26 @@ function removeQuickMeal(id){
   state.quickMeals=state.quickMeals.filter(q=>q.id!==id);
   persist();render();
 }
+function addShoppingGaps(){
+  if(!currentRecommendation||!currentRecommendation.shoppingGaps.length)return;
+  currentRecommendation.shoppingGaps.forEach(text=>{
+    const key=text.trim().toLowerCase();
+    if(!state.shoppingList.some(s=>s.text.trim().toLowerCase()===key)){
+      state.shoppingList.push({id:String(Date.now())+'-'+state.shoppingList.length,text,sourceMeal:currentRecommendation.name,createdAt:new Date().toISOString()});
+    }
+  });
+  persist();render();
+}
+function removeShoppingItem(id){
+  state.shoppingList=state.shoppingList.filter(s=>s.id!==id);
+  persist();render();
+}
+function clearShoppingList(){
+  state.shoppingList=[];
+  persist();render();
+}
 function createBackup(){
-  backupData.value=JSON.stringify({version:1,profile:state.profile,items:state.items,feedback:state.feedback,quickMeals:state.quickMeals},null,2);
+  backupData.value=JSON.stringify({version:1,profile:state.profile,items:state.items,feedback:state.feedback,quickMeals:state.quickMeals,shoppingList:state.shoppingList},null,2);
 }
 function restoreBackup(){
   try{
@@ -255,6 +286,7 @@ function restoreBackup(){
     state.items=data.items;
     state.feedback=Array.isArray(data.feedback)?data.feedback:[];
     state.quickMeals=Array.isArray(data.quickMeals)?data.quickMeals:[];
+    state.shoppingList=Array.isArray(data.shoppingList)?data.shoppingList:[];
     state.processedTokens=[];
     state.lastAction=null;
     persist();applyProfile();render();
@@ -270,7 +302,7 @@ function loadDemo(){
  {id:103,name:'Protein yogurt',role:'breakfast',loc:'Fridge',servings:2,method:'no-cook',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:80,health:null,healthConfirmed:false},
  {id:104,name:'Restaurant leftovers',role:'complete',loc:'Fridge',servings:1,method:'microwave',skill:1,effort:1,cleanup:1,age:2,opened:true,leftover:true,preference:70,health:null,healthConfirmed:false},
  {id:105,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:2,method:'stovetop',skill:2,effort:2,cleanup:2,age:2,opened:false,leftover:false,preference:70,health:null,healthConfirmed:false}
- ];state.processedTokens=[];state.lastAction=null;persist();applyProfile();render();
+ ];state.shoppingList=[];state.processedTokens=[];state.lastAction=null;persist();applyProfile();render();
 }
 function applyProfile(){
  if(!state.profile)return;
