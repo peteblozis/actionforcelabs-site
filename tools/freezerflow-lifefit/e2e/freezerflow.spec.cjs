@@ -1,0 +1,302 @@
+const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
+
+async function openApp(page) {
+  await page.goto('/tester/freezerflow-lifefit/');
+  await expect(page.getByRole('heading', { name: 'FreezerFlow LifeFit' })).toBeVisible();
+}
+
+async function selectTab(page, name) {
+  await page.getByRole('button', { name }).click();
+}
+
+test('neutral demo produces one primary meal and safe leftover reheat guidance', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('Restaurant leftovers');
+  await expect(page.locator('#decisionCard')).toContainText('165°F');
+  await expect(page.locator('#decisionCard')).toContainText('MAKE NOW');
+  await expect(page.locator('#decisionCard').getByRole('button', { name: 'Ate it / liked it' })).toHaveCount(1);
+});
+
+test('disallowed stovetop inventory fails closed', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['microwave','air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'},
+    items:[{id:1,name:'Skillet pasta kit',role:'complete',loc:'Freezer',servings:1,method:'stovetop',skill:2,effort:2,cleanup:2,age:2,opened:false,leftover:false,preference:70,health:60}],
+    feedback:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('No eligible meal');
+});
+
+test('low-confidence inferred inventory cannot drive decision until one-tap confirmation', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Save LifeFit profile' }).click();
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Salmon fillet');
+  await page.getByLabel('Best simple method').selectOption('air-fryer');
+  await page.getByLabel(/Added by scan/).check();
+  await page.getByRole('button', { name: 'Add item' }).click();
+  await expect(page.locator('#inventoryList')).toContainText('NEEDS CONFIRMATION');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('No eligible meal');
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByRole('button', { name: 'Still here' }).click();
+  await expect(page.locator('#inventoryList')).not.toContainText('NEEDS CONFIRMATION');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('Salmon fillet');
+  await expect(page.locator('#decisionCard')).toContainText('145°F');
+});
+
+test('meal completion updates inventory and undo restores it', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByRole('button', { name: 'Ate it / liked it' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await expect(page.locator('#inventoryList')).not.toContainText('Restaurant leftovers');
+  await expect(page.locator('#inventoryList')).toContainText('2 serving(s)');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByRole('button', { name: 'Undo last update' }).click();
+  await selectTab(page, /2 · Inventory/);
+  await expect(page.locator('#inventoryList')).toContainText('Restaurant leftovers');
+});
+
+test('large spacious mode is a real UI state and build identity is visible', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator('#buildId')).toContainText('Build identity:');
+  await page.getByRole('button', { name: 'Large / spacious view' }).click();
+  await expect(page.locator('body')).toHaveClass(/spacious/);
+});
+
+test('almost-there meal exposes one specific shopping gap and no duplicate gap when side exists', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer','microwave'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'},
+    items:[{id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,preference:80,health:80}],
+    feedback:[],quickMeals:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('ALMOST THERE — simple vegetable or salad.');
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Broccoli');
+  await page.getByLabel('Meal role').selectOption('side');
+  await page.getByLabel('Best simple method').selectOption('microwave');
+  await page.getByLabel('Required kitchen confidence').selectOption('1');
+  await page.getByLabel('Required effort').selectOption('1');
+  await page.getByLabel('Required cleanup').selectOption('1');
+  await page.getByRole('button', { name: 'Add item' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('MAKE NOW — no shopping required.');
+  await expect(page.locator('#decisionCard')).not.toContainText('simple vegetable or salad');
+});
+
+test('recommended meal can be saved as a persistent user Quick Meal', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByRole('button', { name: 'Save to Quick Meals' }).click();
+  await selectTab(page, /4 · Quick Meals/);
+  await expect(page.locator('#quickMealList')).toContainText('Restaurant leftovers');
+  await page.reload();
+  await selectTab(page, /4 · Quick Meals/);
+  await expect(page.locator('#quickMealList')).toContainText('Restaurant leftovers');
+});
+
+test('local backup restores profile inventory and Quick Meals after local data loss', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByRole('button', { name: 'Save to Quick Meals' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByRole('button', { name: 'Create backup' }).click();
+  const backup = await page.getByLabel('FreezerFlow backup data').inputValue();
+  expect(backup).toContain('Salmon fillet');
+  expect(backup).toContain('quickMeals');
+
+  await page.evaluate(() => localStorage.removeItem('freezerflow_lifefit_mvp_v1'));
+  await page.reload();
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('FreezerFlow backup data').fill(backup);
+  await page.getByRole('button', { name: 'Restore backup' }).click();
+  await expect(page.locator('#inventoryList')).toContainText('Salmon fillet');
+  await selectTab(page, /4 · Quick Meals/);
+  await expect(page.locator('#quickMealList')).toContainText('Restaurant leftovers');
+});
+
+test('cooking extra portions deducts actual ingredients and creates only the true leftovers', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer','microwave'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'},
+    items:[
+      {id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:3,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,preference:85,health:80},
+      {id:2,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:75,health:85}
+    ],
+    feedback:[],quickMeals:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByLabel('Prepare portions').selectOption('3');
+  await page.getByRole('button', { name: 'Ate it / liked it' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await expect(page.locator('#inventoryList .item')).toHaveCount(1);
+  await expect(page.locator('#inventoryList .item')).toContainText('Salmon fillet + Broccoli leftovers');
+  await expect(page.locator('#inventoryList .item')).toContainText('2 serving(s)');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('165°F');
+});
+
+test('WCAG automated scan has no serious or critical A/AA violations', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Load neutral demo' }).click();
+  await selectTab(page, /2 · Inventory/);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'])
+    .analyze();
+  const material = results.violations.filter(v => v.impact === 'serious' || v.impact === 'critical');
+  expect(material, JSON.stringify(material, null, 2)).toEqual([]);
+});
+
+test('visible interactive targets meet the WCAG 2.2 minimum target size', async ({ page }) => {
+  await openApp(page);
+  const targets = page.locator('button:visible,input:not([type="checkbox"]):visible,select:visible,textarea:visible,.check:visible');
+  const count = await targets.count();
+  for(let i=0;i<count;i++){
+    const box = await targets.nth(i).boundingBox();
+    expect(box, 'visible pointer target should have a bounding box').not.toBeNull();
+    expect(box.width, 'pointer target width should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+    expect(box.height, 'pointer target height should be at least 24 CSS px').toBeGreaterThanOrEqual(24);
+  }
+});
+
+test('mobile and spacious modes do not create horizontal scrolling', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await openApp(page);
+  const normal = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(normal.scroll).toBeLessThanOrEqual(normal.client);
+  await page.getByRole('button', { name: 'Large / spacious view' }).click();
+  const spacious = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(spacious.scroll).toBeLessThanOrEqual(spacious.client);
+});
+
+test('user food-avoid preferences hard-filter matching inventory without inventing nutrition data', async ({ page }) => {
+  await openApp(page);
+  await page.getByLabel('Foods I do not want suggested').fill('mushroom');
+  await page.getByRole('button', { name: 'Save LifeFit profile' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Mushroom ravioli');
+  await page.getByLabel('Meal role').selectOption('complete');
+  await page.getByLabel('Best simple method').selectOption('microwave');
+  await page.getByRole('button', { name: 'Add item' }).click();
+
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('freezerflow_lifefit_mvp_v1')));
+  expect(stored.items[0].healthConfirmed).toBe(false);
+  expect(stored.items[0].health).toBeNull();
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('No eligible meal');
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('Item name').fill('Salmon fillet');
+  await page.getByLabel('Best simple method').selectOption('air-fryer');
+  await page.getByRole('button', { name: 'Add item' }).click();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('Salmon fillet');
+  await expect(page.locator('#decisionCard')).not.toContainText('Mushroom ravioli');
+});
+
+test('Top-Off Shopping adds only the current specific gap and suppresses duplicates', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer','microwave'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced',avoidTerms:[]},
+    items:[{id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,inferred:false,sourceConfidence:1,lastConfirmedAt:new Date().toISOString(),preference:50,health:null,healthConfirmed:false}],
+    feedback:[],quickMeals:[],shoppingList:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('ALMOST THERE — simple vegetable or salad.');
+  await page.getByRole('button', { name: 'Add gap to Top-Off List' }).click();
+
+  await selectTab(page, /5 · Shopping/);
+  await expect(page.locator('#shoppingList .item')).toHaveCount(1);
+  await expect(page.locator('#shoppingList')).toContainText('simple vegetable or salad');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Add gap to Top-Off List' }).click();
+  await selectTab(page, /5 · Shopping/);
+  await expect(page.locator('#shoppingList .item')).toHaveCount(1);
+});
+
+test('MAKE NOW meal does not offer unnecessary Top-Off Shopping', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer','microwave'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced',avoidTerms:[]},
+    items:[
+      {id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,inferred:false,sourceConfidence:1,lastConfirmedAt:new Date().toISOString(),preference:50,health:null,healthConfirmed:false},
+      {id:2,name:'Broccoli',role:'side',loc:'Freezer',servings:2,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,inferred:false,sourceConfidence:1,lastConfirmedAt:new Date().toISOString(),preference:50,health:null,healthConfirmed:false}
+    ],
+    feedback:[],quickMeals:[],shoppingList:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('MAKE NOW — no shopping required.');
+  await expect(page.getByRole('button', { name: 'Add gap to Top-Off List' })).toHaveCount(0);
+});
+
+test('Top-Off Shopping survives backup and restore', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced',avoidTerms:[]},
+    items:[{id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:2,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,inferred:false,sourceConfidence:1,lastConfirmedAt:new Date().toISOString(),preference:50,health:null,healthConfirmed:false}],
+    feedback:[],quickMeals:[],shoppingList:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByRole('button', { name: 'Add gap to Top-Off List' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await page.getByRole('button', { name: 'Create backup' }).click();
+  const backup=await page.getByLabel('FreezerFlow backup data').inputValue();
+  expect(backup).toContain('shoppingList');
+  expect(backup).toContain('simple vegetable or salad');
+
+  await page.evaluate(() => localStorage.removeItem('freezerflow_lifefit_mvp_v1'));
+  await page.reload();
+  await selectTab(page, /2 · Inventory/);
+  await page.getByLabel('FreezerFlow backup data').fill(backup);
+  await page.getByRole('button', { name: 'Restore backup' }).click();
+  await selectTab(page, /5 · Shopping/);
+  await expect(page.locator('#shoppingList')).toContainText('simple vegetable or salad');
+});
+

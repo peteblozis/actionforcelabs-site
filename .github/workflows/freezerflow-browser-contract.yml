@@ -1,0 +1,59 @@
+name: FreezerFlow Browser Contract
+
+on:
+  pull_request:
+    paths:
+      - "tester/freezerflow-lifefit/**"
+      - "tools/freezerflow-lifefit/**"
+      - ".github/workflows/freezerflow-browser-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-e2e:
+    name: FreezerFlow Chromium journey
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install test dependencies
+        working-directory: tools/freezerflow-lifefit
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        working-directory: tools/freezerflow-lifefit
+        run: npx playwright install --with-deps chromium
+
+      - name: Start static test server
+        run: |
+          python3 -m http.server 4173 > /tmp/freezerflow-http.log 2>&1 &
+          echo $! > /tmp/freezerflow-http.pid
+          for i in {1..20}; do
+            curl -fsS http://127.0.0.1:4173/tester/freezerflow-lifefit/ >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/freezerflow-http.log
+          exit 1
+
+      - name: Run browser contract
+        working-directory: tools/freezerflow-lifefit
+        run: npm run test:e2e
+
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freezerflow-browser-failure
+          path: |
+            tools/freezerflow-lifefit/playwright-report
+            tools/freezerflow-lifefit/test-results
+          if-no-files-found: ignore

@@ -37,3 +37,24 @@ jobs:
           name: forge-factory-governance-report
           path: artifacts/forge-factory-governance-report.json
           if-no-files-found: error
+
+  freezerflow-mvp-contract:
+    name: FreezerFlow MVP contract
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run FreezerFlow static product-spine test
+        shell: pwsh
+        run: ./tools/freezerflow-lifefit/test-mvp-static.ps1
+
+      - name: Run FreezerFlow decision-logic tests
+        shell: pwsh
+        run: node ./tools/freezerflow-lifefit/test-mvp-logic.cjs
+
+      - name: Run FreezerFlow storage-adapter tests
+        shell: pwsh
+        run: node ./tools/freezerflow-lifefit/test-storage-adapter.cjs
+
