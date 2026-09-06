@@ -34,9 +34,10 @@ jobs:
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force -Path artifacts/freezerflow-package | Out-Null
           Copy-Item -Recurse -Force tester/freezerflow-lifefit artifacts/freezerflow-package/freezerflow-lifefit
+          $sourceSha = "${{ github.event.pull_request.head.sha || github.sha }}"
           $manifest = [ordered]@{
             product = "FreezerFlow LifeFit"
-            source_sha = "${{ github.event.pull_request.head.sha || github.sha }}"
+            source_sha = $sourceSha
             pull_request = "${{ github.event.pull_request.number || '' }}"
             generated_utc = (Get-Date).ToUniversalTime().ToString("o")
             package_scope = "tester/freezerflow-lifefit only"
@@ -44,6 +45,13 @@ jobs:
             contains_private_core = $false
           }
           $manifest | ConvertTo-Json | Set-Content -Encoding UTF8 artifacts/freezerflow-package/manifest.json
+          $buildMeta = [ordered]@{
+            product = "FreezerFlow LifeFit"
+            stage = "tested-package"
+            source_sha = $sourceSha
+            package_scope = "tester/freezerflow-lifefit"
+          }
+          $buildMeta | ConvertTo-Json | Set-Content -Encoding UTF8 artifacts/freezerflow-package/freezerflow-lifefit/build-meta.json
           Compress-Archive -Path artifacts/freezerflow-package/* -DestinationPath artifacts/freezerflow-lifefit-tester.zip -Force
 
       - name: Verify package boundary
