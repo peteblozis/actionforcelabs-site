@@ -150,18 +150,16 @@ label{display:block;font-weight:700;margin:8px 0 6px}input,select,textarea{width
     </div>
   </section>
 </main>
+<script src="/tester/freezerflow-lifefit/storage-adapter.js"></script>
 <script src="/tester/freezerflow-lifefit/logic.js"></script>
 <script>
 const KEY='freezerflow_lifefit_mvp_v1';
-const state=JSON.parse(localStorage.getItem(KEY)||'{"profile":null,"items":[],"feedback":[],"quickMeals":[],"shoppingList":[],"processedTokens":[],"lastAction":null}');
-if(!Array.isArray(state.feedback))state.feedback=[];
-if(!Array.isArray(state.quickMeals))state.quickMeals=[];
-if(!Array.isArray(state.shoppingList))state.shoppingList=[];
-if(!Array.isArray(state.processedTokens))state.processedTokens=[];
+const storageAdapter=FreezerFlowStorage.createLocalStorageAdapter(window.localStorage,KEY);
+const state=storageAdapter.load();
 let currentRecommendation=null;
 if(!Object.prototype.hasOwnProperty.call(state,'lastAction'))state.lastAction=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
+function persist(){storageAdapter.save(state)}
 function methods(){return [...document.querySelectorAll('#applianceChecks input:checked')].map(x=>x.value)}
 function saveProfile(){
   state.profile={methods:methods(),skill:+skill.value,effort:+effort.value,cleanup:+cleanup.value,household:+household.value,lifeMode:lifeMode.value,goal:goal.value,avoidTerms:avoidTerms.value.split(',').map(x=>x.trim()).filter(Boolean)};
@@ -276,17 +274,13 @@ function clearShoppingList(){
   persist();render();
 }
 function createBackup(){
-  backupData.value=JSON.stringify({version:1,profile:state.profile,items:state.items,feedback:state.feedback,quickMeals:state.quickMeals,shoppingList:state.shoppingList},null,2);
+  backupData.value=storageAdapter.exportData(state);
 }
 function restoreBackup(){
   try{
-    const data=JSON.parse(backupData.value);
-    if(!data||data.version!==1||!Array.isArray(data.items)||!Array.isArray(data.quickMeals||[]))throw new Error('Unsupported backup');
-    state.profile=data.profile||null;
-    state.items=data.items;
-    state.feedback=Array.isArray(data.feedback)?data.feedback:[];
-    state.quickMeals=Array.isArray(data.quickMeals)?data.quickMeals:[];
-    state.shoppingList=Array.isArray(data.shoppingList)?data.shoppingList:[];
+    const restored=storageAdapter.importData(backupData.value);
+    Object.keys(state).forEach(k=>delete state[k]);
+    Object.assign(state,restored);
     state.processedTokens=[];
     state.lastAction=null;
     persist();applyProfile();render();
@@ -309,7 +303,7 @@ function applyProfile(){
  document.querySelectorAll('#applianceChecks input').forEach(x=>x.checked=state.profile.methods.includes(x.value));
  skill.value=state.profile.skill;effort.value=state.profile.effort;cleanup.value=state.profile.cleanup;household.value=state.profile.household;lifeMode.value=state.profile.lifeMode;goal.value=state.profile.goal;avoidTerms.value=Array.isArray(state.profile.avoidTerms)?state.profile.avoidTerms.join(', '):'';
 }
-function resetAll(){if(confirm('Clear this browser-only demo?')){localStorage.removeItem(KEY);location.reload()}}
+function resetAll(){if(confirm('Clear this browser-only demo?')){storageAdapter.clear();location.reload()}}
 function toggleSpace(){document.body.classList.toggle('spacious');localStorage.setItem('ff_space',document.body.classList.contains('spacious')?'1':'0')}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
 if(localStorage.getItem('ff_space')==='1')document.body.classList.add('spacious');
