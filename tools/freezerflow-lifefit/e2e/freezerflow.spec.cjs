@@ -38,6 +38,7 @@ test('low-confidence inferred inventory cannot drive decision until one-tap conf
   await page.getByRole('button', { name: 'Save LifeFit profile' }).click();
   await selectTab(page, /2 · Inventory/);
   await page.getByLabel('Item name').fill('Salmon fillet');
+  await page.getByLabel('Best simple method').selectOption('air-fryer');
   await page.getByLabel(/Added by scan/).check();
   await page.getByRole('button', { name: 'Add item' }).click();
   await expect(page.locator('#inventoryList')).toContainText('NEEDS CONFIRMATION');
