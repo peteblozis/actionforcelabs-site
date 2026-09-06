@@ -144,3 +144,30 @@ test('local backup restores profile inventory and Quick Meals after local data l
   await expect(page.locator('#quickMealList')).toContainText('Restaurant leftovers');
 });
 
+test('cooking extra portions deducts actual ingredients and creates only the true leftovers', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => localStorage.setItem('freezerflow_lifefit_mvp_v1', JSON.stringify({
+    profile:{methods:['air-fryer','microwave'],skill:2,effort:2,cleanup:2,household:1,lifeMode:'Solo routine',goal:'balanced'},
+    items:[
+      {id:1,name:'Salmon fillet',role:'protein',loc:'Freezer',servings:3,method:'air-fryer',skill:2,effort:2,cleanup:1,age:1,opened:false,leftover:false,preference:85,health:80},
+      {id:2,name:'Broccoli',role:'side',loc:'Freezer',servings:3,method:'microwave',skill:1,effort:1,cleanup:1,age:1,opened:false,leftover:false,preference:75,health:85}
+    ],
+    feedback:[],quickMeals:[],processedTokens:[],lastAction:null
+  })));
+  await page.reload();
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await page.getByLabel('Prepare portions').selectOption('3');
+  await page.getByRole('button', { name: 'Ate it / liked it' }).click();
+
+  await selectTab(page, /2 · Inventory/);
+  await expect(page.locator('#inventoryList')).not.toContainText('Salmon fillet');
+  await expect(page.locator('#inventoryList')).not.toContainText('Broccoli');
+  await expect(page.locator('#inventoryList')).toContainText('Salmon fillet + Broccoli leftovers');
+  await expect(page.locator('#inventoryList')).toContainText('2 serving(s)');
+
+  await selectTab(page, /3 · Best Meal/);
+  await page.getByRole('button', { name: 'Tell me what to eat next' }).click();
+  await expect(page.locator('#decisionCard')).toContainText('165°F');
+});
+
